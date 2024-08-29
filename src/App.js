@@ -14,7 +14,7 @@ function App() {
         // Basic authentication
         const encodedPassword = btoa(password); // Base64 encode the password
         try {
-            const response = await axios.get('http://localhost:3000/last-updated', {
+            const response = await axios.get('https://tnp-backend.vercel.app/last-updated', {
                 headers: {
                     'Authorization': `Basic ${encodedPassword}`
                 }
@@ -35,7 +35,7 @@ function App() {
 
     const fetchData = async (type) => {
         try {
-            const response = await axios.get(`http://localhost:3000/${type}`, {
+            const response = await axios.get(`https://tnp-backend.vercel.app/${type}`, {
                 headers: {
                     'Authorization': `Basic ${btoa(password)}`
                 }
