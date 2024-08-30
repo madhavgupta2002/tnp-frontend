@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FaChartBar, FaBriefcase, FaClipboardList, FaSearch, FaSignOutAlt, FaMoon, FaSun } from 'react-icons/fa';
+import { FaChartBar, FaBriefcase, FaClipboardList, FaSearch, FaSignOutAlt, FaMoon, FaSun, FaBars } from 'react-icons/fa';
 
 function App() {
     const [activeData, setActiveData] = useState(null);
@@ -11,6 +11,7 @@ function App() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [darkMode, setDarkMode] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
     const handlePasswordSubmit = async (e) => {
         e.preventDefault();
@@ -36,7 +37,7 @@ function App() {
     }, [dataType, isAuthenticated]);
 
     const fetchData = async (type) => {
-        setLoading(true); // Set loading to true when fetching data
+        setLoading(true);
         try {
             const response = await axios.get(`https://tnp-backend.vercel.app/${type}`, {
                 headers: {
@@ -47,7 +48,7 @@ function App() {
         } catch (error) {
             console.error('Error fetching data:', error);
         } finally {
-            setLoading(false); // Set loading to false after fetching data
+            setLoading(false);
         }
     };
 
@@ -133,11 +134,20 @@ function App() {
         setDarkMode(!darkMode);
     };
 
+    const toggleSidebar = () => {
+        setSidebarOpen(!sidebarOpen);
+    };
+
     return (
         <div className={`flex flex-col h-screen ${darkMode ? 'bg-gray-900' : 'bg-white'} font-sans`}>
             {/* Header */}
             <header className="bg-[#212121] text-white p-5 flex justify-between items-center font-helvetica">
-                <h1 className="text-3xl font-bold">TNP RM</h1>
+                <div className="flex items-center">
+                    <button onClick={toggleSidebar} className="mr-4 text-2xl md:hidden">
+                        <FaBars />
+                    </button>
+                    <h1 className="text-3xl font-bold">TNP RM</h1>
+                </div>
                 <div className="flex items-center">
                     <button onClick={toggleDarkMode} className="mr-5 text-2xl">
                         {darkMode ? <FaSun /> : <FaMoon />}
@@ -150,7 +160,7 @@ function App() {
 
             <div className="flex flex-1 overflow-hidden">
                 {/* Sidebar */}
-                <div className={`w-64 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border-r text-gray-700 p-6 overflow-y-auto font-helvetica`}>
+                <div className={`${sidebarOpen ? 'block' : 'hidden'} md:block w-64 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border-r text-gray-700 p-6 overflow-y-auto font-helvetica`}>
                     <div className="flex flex-col items-center mb-8">
                         <div className={`w-20 h-20  rounded-full flex items-center justify-center mb-2`}>
                             <img src="/avatar.png" alt="Profile" className="w-full h-full rounded-full" />
@@ -158,13 +168,13 @@ function App() {
                         <span className={`text-lg  ${darkMode ? 'text-white' : ''}`}>Admin</span>
                     </div>
                     <nav className="space-y-2">
-                        <button onClick={() => setDataType('fte')} className={`flex items-center w-full py-2 px-4 text-left ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'} rounded ${dataType === 'fte' ? (darkMode ? 'text-white' : 'text-gray-900') : (darkMode ? 'text-[#6B778C]' : 'text-[#6B778C]')}`}>
+                        <button onClick={() => { setDataType('fte'); setSidebarOpen(false); }} className={`flex items-center w-full py-2 px-4 text-left ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'} rounded ${dataType === 'fte' ? (darkMode ? 'text-white' : 'text-gray-900') : (darkMode ? 'text-[#6B778C]' : 'text-[#6B778C]')}`}>
                             <FaBriefcase className={`mr-3 ${dataType === 'fte' ? (darkMode ? 'text-white' : 'text-gray-900') : 'text-[#6B778C]'}`} /> FTE Data
                         </button>
-                        <button onClick={() => setDataType('ppo')} className={`flex items-center w-full py-2 px-4 text-left ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'} rounded ${dataType === 'ppo' ? (darkMode ? 'text-white' : 'text-gray-900') : (darkMode ? 'text-[#6B778C]' : 'text-[#6B778C]')}`}>
+                        <button onClick={() => { setDataType('ppo'); setSidebarOpen(false); }} className={`flex items-center w-full py-2 px-4 text-left ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'} rounded ${dataType === 'ppo' ? (darkMode ? 'text-white' : 'text-gray-900') : (darkMode ? 'text-[#6B778C]' : 'text-[#6B778C]')}`}>
                             <FaClipboardList className={`mr-3 ${dataType === 'ppo' ? (darkMode ? 'text-white' : 'text-gray-900') : 'text-[#6B778C]'}`} /> PPO Data
                         </button>
-                        <button onClick={() => setDataType('stats')} className={`flex items-center w-full py-2 px-4 text-left ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'} rounded ${dataType === 'stats' ? (darkMode ? 'text-white' : 'text-gray-900') : (darkMode ? 'text-[#6B778C]' : 'text-[#6B778C]')}`}>
+                        <button onClick={() => { setDataType('stats'); setSidebarOpen(false); }} className={`flex items-center w-full py-2 px-4 text-left ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'} rounded ${dataType === 'stats' ? (darkMode ? 'text-white' : 'text-gray-900') : (darkMode ? 'text-[#6B778C]' : 'text-[#6B778C]')}`}>
                             <FaChartBar className={`mr-3 ${dataType === 'stats' ? (darkMode ? 'text-white' : 'text-gray-900') : 'text-[#6B778C]'}`} /> Stats
                         </button>
                     </nav>
@@ -188,7 +198,7 @@ function App() {
                                 </button>
                             </form>
                         ) : null}
-                        {loading ? ( // Show loading circle while fetching data
+                        {loading ? (
                             <div className="flex justify-center items-center h-32">
                                 <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
                             </div>
