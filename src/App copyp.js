@@ -11,9 +11,10 @@ function App() {
 
     const handlePasswordSubmit = async (e) => {
         e.preventDefault();
-        const encodedPassword = btoa(password);
+        // Basic authentication
+        const encodedPassword = btoa(password); // Base64 encode the password
         try {
-            const response = await axios.get('https://tnp-backend.vercel.app/last-updated', {
+            const response = await axios.get('http://localhost:3000/last-updated', {
                 headers: {
                     'Authorization': `Basic ${encodedPassword}`
                 }
@@ -34,7 +35,7 @@ function App() {
 
     const fetchData = async (type) => {
         try {
-            const response = await axios.get(`https://tnp-backend.vercel.app/${type}`, {
+            const response = await axios.get(`http://localhost:3000/${type}`, {
                 headers: {
                     'Authorization': `Basic ${btoa(password)}`
                 }
@@ -94,7 +95,7 @@ function App() {
                             <tr>
                                 <th scope="col" className="px-6 py-3">S.No</th>
                                 <th scope="col" className="px-6 py-3">Company Name</th>
-                                {Object.keys(Object.values(data)[0]).filter(key => key !== 'Column1' && key !== 'Company Name' && key !== '').map((key) => (
+                                {Object.keys(Object.values(data)[0]).filter(key => key !== 'Column1' && key !== 'Company Name').map((key) => (
                                     <th key={key} scope="col" className="px-6 py-3">{key}</th>
                                 ))}
                             </tr>
@@ -106,7 +107,7 @@ function App() {
                                     <tr key={row['Column1']} className={index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-700'}>
                                         <td className="px-6 py-4">{index + 1}</td>
                                         <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">{row['Company Name']}</th>
-                                        {Object.entries(row).filter(([key]) => key !== 'Column1' && key !== 'Company Name' && key !== '').map(([key, value]) => (
+                                        {Object.entries(row).filter(([key]) => key !== 'Column1' && key !== 'Company Name').map(([key, value]) => (
                                             <td key={key} className="px-6 py-4">{value}</td>
                                         ))}
                                     </tr>
