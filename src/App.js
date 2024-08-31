@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FaChartBar, FaBriefcase, FaClipboardList, FaSearch, FaSignOutAlt, FaMoon, FaSun, FaBars } from 'react-icons/fa';
+import { FaChartBar, FaBriefcase, FaClipboardList, FaSearch, FaSignOutAlt, FaMoon, FaSun, FaBars, FaGraduationCap } from 'react-icons/fa';
 
 // const BACKEND_BASE_URL = 'http://localhost:3000';
 const BACKEND_BASE_URL = 'https://tnp-backend.vercel.app';
@@ -18,6 +18,8 @@ function App() {
     const [showAverageCGPA, setShowAverageCGPA] = useState(false);
     const [averageCGPAData, setAverageCGPAData] = useState(null);
     const [totalPlaced, setTotalPlaced] = useState(0);
+    const [cgpaAnalysisData, setCgpaAnalysisData] = useState(null);
+    const [inputCGPA, setInputCGPA] = useState('');
 
     const handlePasswordSubmit = async (e) => {
         e.preventDefault();
@@ -86,6 +88,22 @@ function App() {
         }
     };
 
+    const fetchCGPAAnalysis = async () => {
+        setLoading(true);
+        try {
+            const response = await axios.get(`${BACKEND_BASE_URL}/students-above-cgpa/${inputCGPA}`, {
+                headers: {
+                    'Authorization': `Basic ${btoa(password)}`
+                }
+            });
+            setCgpaAnalysisData(response.data);
+        } catch (error) {
+            console.error('Error fetching CGPA analysis data:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const renderTable = (data) => {
         if (!data) return null;
 
@@ -101,7 +119,7 @@ function App() {
                     <table className={`w-full text-sm text-left ${darkMode ? 'text-gray-400' : 'text-gray-500'} font-segoe`}>
                         <thead className={`text-xs uppercase ${darkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-50 text-gray-700'}`}>
                             <tr>
-                                <th scope="col" className="px-6 py-3">Category</th>
+                                <th scope="col" className="px-6 py-3">Branch</th>
                                 {Object.keys(data['Total Students']).map((key) => (
                                     <th key={key} scope="col" className="px-6 py-3">{key}</th>
                                 ))}
@@ -118,6 +136,46 @@ function App() {
                             ))}
                         </tbody>
                     </table>
+                </div>
+            );
+        } else if (dataType === 'cgpaAnalysis') {
+            if (!cgpaAnalysisData) return null;
+
+            const departments = Object.keys(cgpaAnalysisData.departmentWise);
+
+            return (
+                <div>
+                    <h3 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+                        CGPA Analysis (Above {inputCGPA})
+                    </h3>
+                    <div className="overflow-x-auto shadow-md sm:rounded-lg">
+                        <table className={`w-full text-sm text-left ${darkMode ? 'text-gray-400' : 'text-gray-500'} font-segoe`}>
+                            <thead className={`text-xs uppercase ${darkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-50 text-gray-700'}`}>
+                                <tr>
+                                    <th scope="col" className="px-6 py-3">Branch</th>
+                                    {departments.map(dept => (
+                                        <th key={dept} scope="col" className="px-6 py-3">{dept}</th>
+                                    ))}
+                                    <th scope="col" className="px-6 py-3">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {['Total', 'Placed', 'Unplaced'].map((category, index) => (
+                                    <tr key={category} className={index % 2 === 0 ? (darkMode ? 'bg-gray-800' : 'bg-white') : (darkMode ? 'bg-gray-700' : 'bg-gray-50')}>
+                                        <th scope="row" className={`px-6 py-4 font-medium whitespace-nowrap ${darkMode ? 'text-white' : 'text-gray-900'}`}>{category}</th>
+                                        {departments.map(dept => (
+                                            <td key={`${dept}-${category}`} className="px-6 py-4">
+                                                {cgpaAnalysisData.departmentWise[dept][category.toLowerCase()]}
+                                            </td>
+                                        ))}
+                                        <td className="px-6 py-4 font-bold">
+                                            {cgpaAnalysisData.totals[category.toLowerCase()]}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             );
         } else {
@@ -237,6 +295,9 @@ function App() {
                         <button onClick={() => { setDataType('stats'); setSidebarOpen(false); }} className={`flex items-center w-full py-2 px-4 text-left ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'} rounded ${dataType === 'stats' ? (darkMode ? 'text-white' : 'text-gray-900') : (darkMode ? 'text-[#6B778C]' : 'text-[#6B778C]')}`}>
                             <FaChartBar className={`mr-3 ${dataType === 'stats' ? (darkMode ? 'text-white' : 'text-gray-900') : 'text-[#6B778C]'}`} /> Stats
                         </button>
+                        <button onClick={() => { setDataType('cgpaAnalysis'); setSidebarOpen(false); }} className={`flex items-center w-full py-2 px-4 text-left ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'} rounded ${dataType === 'cgpaAnalysis' ? (darkMode ? 'text-white' : 'text-gray-900') : (darkMode ? 'text-[#6B778C]' : 'text-[#6B778C]')}`}>
+                            <FaGraduationCap className={`mr-3 ${dataType === 'cgpaAnalysis' ? (darkMode ? 'text-white' : 'text-gray-900') : 'text-[#6B778C]'}`} /> CGPA Analysis
+                        </button>
                         <div className={`mt-4 p-4 ${darkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-800'} rounded`}>
                             <p className="text-sm font-semibold">Total Placed</p>
                             {isAuthenticated ? (
@@ -279,8 +340,29 @@ function App() {
                                     <h3 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
                                         {dataType === 'fte' ? 'FTE (Full Time + 6 Month Intern) Data' :
                                             dataType === 'ppo' ? 'PPO (Pre Placement Offers) Data' :
-                                                'Stats'}
+                                                dataType === 'stats' ? 'Stats' :
+                                                    'CGPA Analysis'}
                                     </h3>
+                                    {dataType === 'cgpaAnalysis' ? (
+                                        <div className="mb-4">
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                max="10"
+                                                value={inputCGPA}
+                                                onChange={(e) => setInputCGPA(e.target.value)}
+                                                placeholder="Enter CGPA"
+                                                className={`w-full px-4 py-2 rounded border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                                            />
+                                            <button
+                                                onClick={fetchCGPAAnalysis}
+                                                className={`mt-4 px-6 py-2 font-bold text-white ${darkMode ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-800 hover:bg-gray-700'} rounded focus:outline-none focus:shadow-outline`}
+                                            >
+                                                Analyze
+                                            </button>
+                                        </div>
+                                    ) : null}
                                     {renderTable(activeData)}
                                 </div>
                             )
