@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FaChartBar, FaBriefcase, FaClipboardList, FaSearch, FaSignOutAlt, FaMoon, FaSun, FaBars } from 'react-icons/fa';
 
+// const BACKEND_BASE_URL = 'http://localhost:3000';
+const BACKEND_BASE_URL = 'https://tnp-backend.vercel.app';
+
 function App() {
     const [activeData, setActiveData] = useState(null);
     const [dataType, setDataType] = useState('stats');
@@ -12,12 +15,15 @@ function App() {
     const [darkMode, setDarkMode] = useState(false);
     const [loading, setLoading] = useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [showAverageCGPA, setShowAverageCGPA] = useState(false);
+    const [averageCGPAData, setAverageCGPAData] = useState(null);
+    const [totalPlaced, setTotalPlaced] = useState(0);
 
     const handlePasswordSubmit = async (e) => {
         e.preventDefault();
         const encodedPassword = btoa(password);
         try {
-            const response = await axios.get('https://tnp-backend.vercel.app/last-updated', {
+            const response = await axios.get(`${BACKEND_BASE_URL}/last-updated`, {
                 headers: {
                     'Authorization': `Basic ${encodedPassword}`
                 }
@@ -33,13 +39,15 @@ function App() {
     useEffect(() => {
         if (dataType && isAuthenticated) {
             fetchData(dataType);
+            fetchAverageCGPAData(dataType);
+            fetchTotalPlaced();
         }
     }, [dataType, isAuthenticated]);
 
     const fetchData = async (type) => {
         setLoading(true);
         try {
-            const response = await axios.get(`https://tnp-backend.vercel.app/${type}`, {
+            const response = await axios.get(`${BACKEND_BASE_URL}/${type}`, {
                 headers: {
                     'Authorization': `Basic ${btoa(password)}`
                 }
@@ -49,6 +57,32 @@ function App() {
             console.error('Error fetching data:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchAverageCGPAData = async (type) => {
+        try {
+            const response = await axios.get(`${BACKEND_BASE_URL}/selection-${type}`, {
+                headers: {
+                    'Authorization': `Basic ${btoa(password)}`
+                }
+            });
+            setAverageCGPAData(response.data);
+        } catch (error) {
+            console.error('Error fetching average CGPA data:', error);
+        }
+    };
+
+    const fetchTotalPlaced = async () => {
+        try {
+            const response = await axios.get(`${BACKEND_BASE_URL}/total-placed`, {
+                headers: {
+                    'Authorization': `Basic ${btoa(password)}`
+                }
+            });
+            setTotalPlaced(response.data.totalPlaced);
+        } catch (error) {
+            console.error('Error fetching total placed data:', error);
         }
     };
 
@@ -95,32 +129,58 @@ function App() {
             const reversedData = [...filteredData].reverse();
 
             return (
-                <div className="overflow-x-auto shadow-md sm:rounded-lg">
-                    <table className={`w-full text-sm text-left ${darkMode ? 'text-gray-400' : 'text-gray-500'} font-segoe`}>
-                        <thead className={`text-xs uppercase ${darkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-50 text-gray-700'}`}>
-                            <tr>
-                                <th scope="col" className="px-6 py-3">S.No</th>
-                                <th scope="col" className="px-6 py-3">Company Name</th>
-                                {Object.keys(Object.values(data)[0]).filter(key => key !== 'Column1' && key !== 'Company Name' && key !== '').map((key) => (
-                                    <th key={key} scope="col" className="px-6 py-3">{key}</th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {reversedData
-                                .filter(row => row['Company Name'] && typeof row['Company Name'] === 'string' && /[a-zA-Z]/.test(row['Company Name']))
-                                .map((row, index) => (
-                                    <tr key={row['Column1']} className={index % 2 === 0 ? (darkMode ? 'bg-gray-800' : 'bg-white') : (darkMode ? 'bg-gray-700' : 'bg-gray-50')}>
-                                        <td className="px-6 py-4">{index + 1}</td>
-                                        <th scope="row" className={`px-6 py-4 font-medium whitespace-nowrap ${darkMode ? 'text-white' : 'text-gray-900'}`}>{row['Company Name']}</th>
-                                        {Object.entries(row).filter(([key]) => key !== 'Column1' && key !== 'Company Name' && key !== '').map(([key, value]) => (
-                                            <td key={key} className="px-6 py-4">{value}</td>
-                                        ))}
-                                    </tr>
-                                ))
-                            }
-                        </tbody>
-                    </table>
+                <div>
+                    <div className="mb-4 flex items-center">
+                        <FaSearch className="mr-2 text-gray-500" />
+                        <input
+                            type="text"
+                            placeholder="Search Company"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className={`px-4 py-2 rounded border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                        />
+                        <button
+                            onClick={() => setShowAverageCGPA(!showAverageCGPA)}
+                            className={`ml-4 px-4 py-2 rounded ${darkMode ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-800'}`}
+                        >
+                            {showAverageCGPA ? 'Hide Average CGPA' : 'Show Average CGPA'}
+                        </button>
+                    </div>
+                    <div className="overflow-x-auto shadow-md sm:rounded-lg">
+                        <table className={`w-full text-sm text-left ${darkMode ? 'text-gray-400' : 'text-gray-500'} font-segoe`}>
+                            <thead className={`text-xs uppercase ${darkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-50 text-gray-700'}`}>
+                                <tr>
+                                    <th scope="col" className="px-6 py-3">Order</th>
+                                    <th scope="col" className="px-6 py-3">Company Name</th>
+                                    {Object.keys(Object.values(data)[0]).filter(key => key !== 'Column1' && key !== 'Company Name' && key !== '' && key !== 'Order').map((key) => (
+                                        <th key={key} scope="col" className="px-6 py-3">{key}</th>
+                                    ))}
+                                    {showAverageCGPA && <th scope="col" className="px-6 py-3">Average CGPA</th>}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {reversedData
+                                    .filter(row => row['Company Name'] && typeof row['Company Name'] === 'string' && /[a-zA-Z]/.test(row['Company Name']))
+                                    .map((row, index) => (
+                                        <tr key={row['Column1']} className={index % 2 === 0 ? (darkMode ? 'bg-gray-800' : 'bg-white') : (darkMode ? 'bg-gray-700' : 'bg-gray-50')}>
+                                            <td className="px-6 py-4">{row['Order']}</td>
+                                            <th scope="row" className={`px-6 py-4 font-medium whitespace-nowrap ${darkMode ? 'text-white' : 'text-gray-900'}`}>{row['Company Name']}</th>
+                                            {Object.entries(row).filter(([key]) => key !== 'Column1' && key !== 'Company Name' && key !== '' && key !== 'Order').map(([key, value]) => (
+                                                <td key={key} className="px-6 py-4">{value}</td>
+                                            ))}
+                                            {showAverageCGPA && (
+                                                <td className="px-6 py-4">
+                                                    {averageCGPAData && averageCGPAData[row['Company Name']]
+                                                        ? averageCGPAData[row['Company Name']].toFixed(2)
+                                                        : 'N/A'}
+                                                </td>
+                                            )}
+                                        </tr>
+                                    ))
+                                }
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             );
         }
@@ -177,6 +237,17 @@ function App() {
                         <button onClick={() => { setDataType('stats'); setSidebarOpen(false); }} className={`flex items-center w-full py-2 px-4 text-left ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'} rounded ${dataType === 'stats' ? (darkMode ? 'text-white' : 'text-gray-900') : (darkMode ? 'text-[#6B778C]' : 'text-[#6B778C]')}`}>
                             <FaChartBar className={`mr-3 ${dataType === 'stats' ? (darkMode ? 'text-white' : 'text-gray-900') : 'text-[#6B778C]'}`} /> Stats
                         </button>
+                        <div className={`mt-4 p-4 ${darkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-800'} rounded`}>
+                            <p className="text-sm font-semibold">Total Placed</p>
+                            {isAuthenticated ? (
+                                <>
+                                    <p className="text-lg font-bold">{((totalPlaced / 2615) * 100).toFixed(2)}%</p>
+                                    <p className="text-xs">{totalPlaced} / 2615</p>
+                                </>
+                            ) : (
+                                <p className="text-lg font-bold">Login to view</p>
+                            )}
+                        </div>
                     </nav>
                 </div>
 
