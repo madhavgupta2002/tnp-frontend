@@ -17,6 +17,8 @@ function App() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [showAverageCGPA, setShowAverageCGPA] = useState(false);
     const [averageCGPAData, setAverageCGPAData] = useState(null);
+    const [showCTC, setShowCTC] = useState(false);
+    const [ctcData, setCtcData] = useState(null);
     const [totalPlaced, setTotalPlaced] = useState(0);
     const [cgpaAnalysisData, setCgpaAnalysisData] = useState(null);
     const [inputCGPA, setInputCGPA] = useState('');
@@ -42,6 +44,7 @@ function App() {
         if (dataType && isAuthenticated) {
             fetchData(dataType);
             fetchAverageCGPAData(dataType);
+            fetchCTCData(dataType);
             fetchTotalPlaced();
         }
     }, [dataType, isAuthenticated]);
@@ -64,7 +67,7 @@ function App() {
 
     const fetchAverageCGPAData = async (type) => {
         try {
-            const response = await axios.get(`${BACKEND_BASE_URL}/selection-${type}`, {
+            const response = await axios.get(`${BACKEND_BASE_URL}/selection-${type}-cgpa`, {
                 headers: {
                     'Authorization': `Basic ${btoa(password)}`
                 }
@@ -72,6 +75,19 @@ function App() {
             setAverageCGPAData(response.data);
         } catch (error) {
             console.error('Error fetching average CGPA data:', error);
+        }
+    };
+
+    const fetchCTCData = async (type) => {
+        try {
+            const response = await axios.get(`${BACKEND_BASE_URL}/selection-${type}-ctc`, {
+                headers: {
+                    'Authorization': `Basic ${btoa(password)}`
+                }
+            });
+            setCtcData(response.data);
+        } catch (error) {
+            console.error('Error fetching CTC data:', error);
         }
     };
 
@@ -112,25 +128,25 @@ function App() {
                 return <div className={`text-gray-600 ${darkMode ? 'dark:text-gray-400' : ''}`}>No data available for stats</div>;
             }
 
-            const rowNames = ['Total Students', 'FTE', 'PPO', 'Total Selections', 'Percentage'];
+            const rowNames = ['Total Students', 'FTE', 'PPO', 'Total Selections', 'Percentage', 'Average CTC'];
 
             return (
                 <div className="overflow-x-auto shadow-md sm:rounded-lg">
-                    <table className={`w-full text-sm text-left ${darkMode ? 'text-gray-400' : 'text-gray-500'} font-segoe`}>
-                        <thead className={`text-xs uppercase ${darkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-50 text-gray-700'}`}>
+                    <table className={`w-full text-sm text-center ${darkMode ? 'text-gray-400' : 'text-gray-500'} font-segoe`}>
+                        <thead className={`text-xs uppercase ${darkMode ? 'bg-gray-800 text-gray-400' : 'bg-gray-100 text-gray-700'}`}>
                             <tr>
-                                <th scope="col" className="px-6 py-3">Branch</th>
+                                <th scope="col" className="px-2 py-3">Branch</th>
                                 {Object.keys(data['Total Students']).map((key) => (
-                                    <th key={key} scope="col" className="px-6 py-3">{key}</th>
+                                    <th key={key} scope="col" className="px-2 py-3">{key}</th>
                                 ))}
                             </tr>
                         </thead>
                         <tbody>
                             {rowNames.map((rowName, index) => (
                                 <tr key={rowName} className={index % 2 === 0 ? (darkMode ? 'bg-gray-800' : 'bg-white') : (darkMode ? 'bg-gray-700' : 'bg-gray-50')}>
-                                    <th scope="row" className={`px-6 py-4 font-medium whitespace-nowrap ${darkMode ? 'text-white' : 'text-gray-900'}`}>{rowName}</th>
+                                    <th scope="row" className={`px-2 py-4 font-medium whitespace-nowrap ${darkMode ? 'text-white' : 'text-gray-900'}`}>{rowName}</th>
                                     {Object.values(data[rowName]).map((value, index) => (
-                                        <td key={index} className="px-6 py-4">{rowName === 'Percentage' ? value.toFixed(2) : value}</td>
+                                        <td key={index} className="px-2 py-4 text-center">{rowName === 'Percentage' ? `${value.toFixed(2)}%` : rowName === 'Average CTC' ? `${value} LPA` : value}</td>
                                     ))}
                                 </tr>
                             ))}
@@ -149,26 +165,26 @@ function App() {
                         CGPA Analysis (Above {inputCGPA})
                     </h3>
                     <div className="overflow-x-auto shadow-md sm:rounded-lg">
-                        <table className={`w-full text-sm text-left ${darkMode ? 'text-gray-400' : 'text-gray-500'} font-segoe`}>
-                            <thead className={`text-xs uppercase ${darkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-50 text-gray-700'}`}>
+                        <table className={`w-full text-sm text-center ${darkMode ? 'text-gray-400' : 'text-gray-500'} font-segoe`}>
+                            <thead className={`text-xs uppercase ${darkMode ? 'bg-gray-800 text-gray-400' : 'bg-gray-100 text-gray-700'}`}>
                                 <tr>
-                                    <th scope="col" className="px-6 py-3">Branch</th>
+                                    <th scope="col" className="px-2 py-3">Branch</th>
                                     {departments.map(dept => (
-                                        <th key={dept} scope="col" className="px-6 py-3">{dept}</th>
+                                        <th key={dept} scope="col" className="px-2 py-3">{dept}</th>
                                     ))}
-                                    <th scope="col" className="px-6 py-3">Total</th>
+                                    <th scope="col" className="px-2 py-3">Total</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {['Total', 'Placed', 'Unplaced'].map((category, index) => (
                                     <tr key={category} className={index % 2 === 0 ? (darkMode ? 'bg-gray-800' : 'bg-white') : (darkMode ? 'bg-gray-700' : 'bg-gray-50')}>
-                                        <th scope="row" className={`px-6 py-4 font-medium whitespace-nowrap ${darkMode ? 'text-white' : 'text-gray-900'}`}>{category}</th>
+                                        <th scope="row" className={`px-2 py-4 font-medium whitespace-nowrap ${darkMode ? 'text-white' : 'text-gray-900'}`}>{category}</th>
                                         {departments.map(dept => (
-                                            <td key={`${dept}-${category}`} className="px-6 py-4">
+                                            <td key={`${dept}-${category}`} className="px-2 py-4 text-center">
                                                 {cgpaAnalysisData.departmentWise[dept][category.toLowerCase()]}
                                             </td>
                                         ))}
-                                        <td className="px-6 py-4 font-bold">
+                                        <td className="px-2 py-4 font-bold text-center">
                                             {cgpaAnalysisData.totals[category.toLowerCase()]}
                                         </td>
                                     </tr>
@@ -203,17 +219,24 @@ function App() {
                         >
                             {showAverageCGPA ? 'Hide Average CGPA' : 'Show Average CGPA'}
                         </button>
+                        <button
+                            onClick={() => setShowCTC(!showCTC)}
+                            className={`ml-4 px-4 py-2 rounded ${darkMode ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-800'}`}
+                        >
+                            {showCTC ? 'Hide CTC' : 'Show CTC'}
+                        </button>
                     </div>
                     <div className="overflow-x-auto shadow-md sm:rounded-lg">
-                        <table className={`w-full text-sm text-left ${darkMode ? 'text-gray-400' : 'text-gray-500'} font-segoe`}>
-                            <thead className={`text-xs uppercase ${darkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-50 text-gray-700'}`}>
+                        <table className={`w-full text-sm text-center ${darkMode ? 'text-gray-400' : 'text-gray-500'} font-segoe`}>
+                            <thead className={`text-xs uppercase ${darkMode ? 'bg-gray-800 text-gray-400' : 'bg-gray-100 text-gray-700'}`}>
                                 <tr>
-                                    <th scope="col" className="px-6 py-3">Order</th>
-                                    <th scope="col" className="px-6 py-3">Company Name</th>
+                                    <th scope="col" className="px-2 py-3">Order</th>
+                                    <th scope="col" className="px-2 py-3">Company Name</th>
                                     {Object.keys(Object.values(data)[0]).filter(key => key !== 'Column1' && key !== 'Company Name' && key !== '' && key !== 'Order').map((key) => (
-                                        <th key={key} scope="col" className="px-6 py-3">{key}</th>
+                                        <th key={key} scope="col" className="px-2 py-3">{key}</th>
                                     ))}
-                                    {showAverageCGPA && <th scope="col" className="px-6 py-3">Average CGPA</th>}
+                                    {showAverageCGPA && <th scope="col" className="px-2 py-3">Average CGPA</th>}
+                                    {showCTC && <th scope="col" className="px-2 py-3">CTC</th>}
                                 </tr>
                             </thead>
                             <tbody>
@@ -221,15 +244,22 @@ function App() {
                                     .filter(row => row['Company Name'] && typeof row['Company Name'] === 'string' && /[a-zA-Z]/.test(row['Company Name']))
                                     .map((row, index) => (
                                         <tr key={row['Column1']} className={index % 2 === 0 ? (darkMode ? 'bg-gray-800' : 'bg-white') : (darkMode ? 'bg-gray-700' : 'bg-gray-50')}>
-                                            <td className="px-6 py-4">{row['Order']}</td>
-                                            <th scope="row" className={`px-6 py-4 font-medium whitespace-nowrap ${darkMode ? 'text-white' : 'text-gray-900'}`}>{row['Company Name']}</th>
+                                            <td className="px-2 py-4 text-center">{row['Order']}</td>
+                                            <th scope="row" className={`px-2 py-4 font-medium whitespace-nowrap ${darkMode ? 'text-white' : 'text-gray-900'}`}>{row['Company Name']}</th>
                                             {Object.entries(row).filter(([key]) => key !== 'Column1' && key !== 'Company Name' && key !== '' && key !== 'Order').map(([key, value]) => (
-                                                <td key={key} className="px-6 py-4">{value}</td>
+                                                <td key={key} className="px-2 py-4 text-center">{value}</td>
                                             ))}
                                             {showAverageCGPA && (
-                                                <td className="px-6 py-4">
+                                                <td className="px-2 py-4 text-center">
                                                     {averageCGPAData && averageCGPAData[row['Company Name']]
                                                         ? averageCGPAData[row['Company Name']].toFixed(2)
+                                                        : 'N/A'}
+                                                </td>
+                                            )}
+                                            {showCTC && (
+                                                <td className="px-2 py-4 text-center">
+                                                    {ctcData && ctcData[row['Company Name']]
+                                                        ? `${ctcData[row['Company Name']]} LPA`
                                                         : 'N/A'}
                                                 </td>
                                             )}
