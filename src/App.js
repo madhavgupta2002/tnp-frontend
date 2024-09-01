@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FaChartBar, FaBriefcase, FaClipboardList, FaSearch, FaSignOutAlt, FaMoon, FaSun, FaBars, FaGraduationCap } from 'react-icons/fa';
+import { FaChartBar, FaBriefcase, FaClipboardList, FaSearch, FaSignOutAlt, FaMoon, FaSun, FaBars, FaGraduationCap, FaFileAlt, FaFileContract } from 'react-icons/fa';
 
 // const BACKEND_BASE_URL = 'http://localhost:3000';
 const BACKEND_BASE_URL = 'https://tnp-backend.vercel.app';
@@ -22,6 +22,8 @@ function App() {
     const [totalPlaced, setTotalPlaced] = useState(0);
     const [cgpaAnalysisData, setCgpaAnalysisData] = useState(null);
     const [inputCGPA, setInputCGPA] = useState('');
+    const [fteOffers, setFteOffers] = useState([]);
+    const [ppoOffers, setPpoOffers] = useState([]);
 
     const handlePasswordSubmit = async (e) => {
         e.preventDefault();
@@ -46,6 +48,16 @@ function App() {
             fetchAverageCGPAData(dataType);
             fetchCTCData(dataType);
             fetchTotalPlaced();
+        }
+    }, [dataType, isAuthenticated]);
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            if (dataType === 'fteOffers') {
+                fetchFteOffers();
+            } else if (dataType === 'ppoOffers') {
+                fetchPpoOffers();
+            }
         }
     }, [dataType, isAuthenticated]);
 
@@ -115,6 +127,38 @@ function App() {
             setCgpaAnalysisData(response.data);
         } catch (error) {
             console.error('Error fetching CGPA analysis data:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchFteOffers = async () => {
+        setLoading(true);
+        try {
+            const response = await axios.get(`${BACKEND_BASE_URL}/fte-offers`, {
+                headers: {
+                    'Authorization': `Basic ${btoa(password)}`
+                }
+            });
+            setFteOffers(response.data);
+        } catch (error) {
+            console.error('Error fetching FTE offers:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchPpoOffers = async () => {
+        setLoading(true);
+        try {
+            const response = await axios.get(`${BACKEND_BASE_URL}/ppo-offers`, {
+                headers: {
+                    'Authorization': `Basic ${btoa(password)}`
+                }
+            });
+            setPpoOffers(response.data);
+        } catch (error) {
+            console.error('Error fetching PPO offers:', error);
         } finally {
             setLoading(false);
         }
@@ -274,6 +318,39 @@ function App() {
         }
     };
 
+    const renderOffers = (offers) => {
+        return (
+            <div className="overflow-x-auto shadow-md sm:rounded-lg">
+                <table className={`w-full text-sm text-center ${darkMode ? 'text-gray-400' : 'text-gray-500'} font-segoe`}>
+                    <thead className={`text-xs uppercase ${darkMode ? 'bg-gray-800 text-gray-400' : 'bg-gray-100 text-gray-700'}`}>
+                        <tr>
+                            <th scope="col" className="px-2 py-3">Roll No</th>
+                            <th scope="col" className="px-2 py-3">Branch</th>
+                            <th scope="col" className="px-2 py-3">Name</th>
+                            <th scope="col" className="px-2 py-3">Company Name</th>
+                            <th scope="col" className="px-2 py-3">Role</th>
+                            <th scope="col" className="px-2 py-3">CTC</th>
+                            {dataType === 'fteOffers' && <th scope="col" className="px-2 py-3">Stipend</th>}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {offers.map((offer, index) => (
+                            <tr key={index} className={index % 2 === 0 ? (darkMode ? 'bg-gray-800' : 'bg-white') : (darkMode ? 'bg-gray-700' : 'bg-gray-50')}>
+                                <td className="px-2 py-4">{offer.rollNo}</td>
+                                <td className="px-2 py-4">{offer.branch}</td>
+                                <td className="px-2 py-4">{offer.name}</td>
+                                <td className="px-2 py-4">{offer.companyName}</td>
+                                <td className="px-2 py-4">{offer.role}</td>
+                                <td className="px-2 py-4">{offer.ctc}</td>
+                                {dataType === 'fteOffers' && <td className="px-2 py-4">{offer.stipend}</td>}
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        );
+    };
+
     const handleLogout = () => {
         window.location.reload();
     };
@@ -328,6 +405,12 @@ function App() {
                         <button onClick={() => { setDataType('cgpaAnalysis'); setSidebarOpen(false); }} className={`flex items-center w-full py-2 px-4 text-left ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'} rounded ${dataType === 'cgpaAnalysis' ? (darkMode ? 'text-white' : 'text-gray-900') : (darkMode ? 'text-[#6B778C]' : 'text-[#6B778C]')}`}>
                             <FaGraduationCap className={`mr-3 ${dataType === 'cgpaAnalysis' ? (darkMode ? 'text-white' : 'text-gray-900') : 'text-[#6B778C]'}`} /> CGPA Analysis
                         </button>
+                        <button onClick={() => { setDataType('fteOffers'); setSidebarOpen(false); }} className={`flex items-center w-full py-2 px-4 text-left ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'} rounded ${dataType === 'fteOffers' ? (darkMode ? 'text-white' : 'text-gray-900') : (darkMode ? 'text-[#6B778C]' : 'text-[#6B778C]')}`}>
+                            <FaFileAlt className={`mr-3 ${dataType === 'fteOffers' ? (darkMode ? 'text-white' : 'text-gray-900') : 'text-[#6B778C]'}`} /> FTE Offers
+                        </button>
+                        <button onClick={() => { setDataType('ppoOffers'); setSidebarOpen(false); }} className={`flex items-center w-full py-2 px-4 text-left ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'} rounded ${dataType === 'ppoOffers' ? (darkMode ? 'text-white' : 'text-gray-900') : (darkMode ? 'text-[#6B778C]' : 'text-[#6B778C]')}`}>
+                            <FaFileContract className={`mr-3 ${dataType === 'ppoOffers' ? (darkMode ? 'text-white' : 'text-gray-900') : 'text-[#6B778C]'}`} /> PPO Offers
+                        </button>
                         <div className={`mt-4 p-4 ${darkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-800'} rounded`}>
                             <p className="text-sm font-semibold">Total Placed</p>
                             {isAuthenticated ? (
@@ -365,37 +448,42 @@ function App() {
                                 <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
                             </div>
                         ) : (
-                            activeData && (
-                                <div className="mt-8">
-                                    <h3 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
-                                        {dataType === 'fte' ? 'FTE (Full Time + 6 Month Intern) Data' :
-                                            dataType === 'ppo' ? 'PPO (Pre Placement Offers) Data' :
-                                                dataType === 'stats' ? 'Stats' :
-                                                    'CGPA Analysis'}
-                                    </h3>
-                                    {dataType === 'cgpaAnalysis' ? (
-                                        <div className="mb-4">
-                                            <input
-                                                type="number"
-                                                step="0.01"
-                                                min="0"
-                                                max="10"
-                                                value={inputCGPA}
-                                                onChange={(e) => setInputCGPA(e.target.value)}
-                                                placeholder="Enter CGPA"
-                                                className={`w-full px-4 py-2 rounded border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                                            />
-                                            <button
-                                                onClick={fetchCGPAAnalysis}
-                                                className={`mt-4 px-6 py-2 font-bold text-white ${darkMode ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-800 hover:bg-gray-700'} rounded focus:outline-none focus:shadow-outline`}
-                                            >
-                                                Analyze
-                                            </button>
-                                        </div>
-                                    ) : null}
-                                    {renderTable(activeData)}
-                                </div>
-                            )
+                            <div className="mt-8">
+                                <h3 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+                                    {dataType === 'fte' ? 'FTE (Full Time + 6 Month Intern) Data' :
+                                        dataType === 'ppo' ? 'PPO (Pre Placement Offers) Data' :
+                                            dataType === 'stats' ? 'Stats' :
+                                                dataType === 'cgpaAnalysis' ? 'CGPA Analysis' :
+                                                    dataType === 'fteOffers' ? 'FTE Offers' :
+                                                        dataType === 'ppoOffers' ? 'PPO Offers' : ''}
+                                </h3>
+                                {dataType === 'cgpaAnalysis' ? (
+                                    <div className="mb-4">
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            max="10"
+                                            value={inputCGPA}
+                                            onChange={(e) => setInputCGPA(e.target.value)}
+                                            placeholder="Enter CGPA"
+                                            className={`w-full px-4 py-2 rounded border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                                        />
+                                        <button
+                                            onClick={fetchCGPAAnalysis}
+                                            className={`mt-4 px-6 py-2 font-bold text-white ${darkMode ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-800 hover:bg-gray-700'} rounded focus:outline-none focus:shadow-outline`}
+                                        >
+                                            Analyze
+                                        </button>
+                                    </div>
+                                ) : dataType === 'fteOffers' ? (
+                                    renderOffers(fteOffers)
+                                ) : dataType === 'ppoOffers' ? (
+                                    renderOffers(ppoOffers)
+                                ) : (
+                                    renderTable(activeData)
+                                )}
+                            </div>
                         )}
                         <footer className={`mt-8 text-center ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                             Last updated on: {lastUpdated}
