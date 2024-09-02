@@ -372,7 +372,7 @@ function App() {
                     <button onClick={toggleSidebar} className="mr-4 text-2xl md:hidden">
                         <FaBars />
                     </button>
-                    <h1 className="text-3xl font-bold">TNP RM</h1>
+                    <h1 className="text-3xl font-bold">DTU TNP</h1>
                 </div>
                 <div className="flex items-center">
                     <button onClick={toggleDarkMode} className="mr-5 text-2xl">
