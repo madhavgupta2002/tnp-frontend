@@ -125,6 +125,7 @@ function App() {
                 }
             });
             setCgpaAnalysisData(response.data);
+            setActiveData(response.data); // Set activeData to the CGPA analysis data
         } catch (error) {
             console.error('Error fetching CGPA analysis data:', error);
         } finally {
@@ -199,9 +200,9 @@ function App() {
                 </div>
             );
         } else if (dataType === 'cgpaAnalysis') {
-            if (!cgpaAnalysisData) return null;
+            if (!data.departmentWise) return null;
 
-            const departments = Object.keys(cgpaAnalysisData.departmentWise);
+            const departments = Object.keys(data.departmentWise);
 
             return (
                 <div>
@@ -225,11 +226,11 @@ function App() {
                                         <th scope="row" className={`px-2 py-4 font-medium whitespace-nowrap ${darkMode ? 'text-white' : 'text-gray-900'}`}>{category}</th>
                                         {departments.map(dept => (
                                             <td key={`${dept}-${category}`} className="px-2 py-4 text-center">
-                                                {cgpaAnalysisData.departmentWise[dept][category.toLowerCase()]}
+                                                {data.departmentWise[dept][category.toLowerCase()]}
                                             </td>
                                         ))}
                                         <td className="px-2 py-4 font-bold text-center">
-                                            {cgpaAnalysisData.totals[category.toLowerCase()]}
+                                            {data.totals[category.toLowerCase()]}
                                         </td>
                                     </tr>
                                 ))}
@@ -475,6 +476,7 @@ function App() {
                                         >
                                             Analyze
                                         </button>
+                                        {renderTable(activeData)}
                                     </div>
                                 ) : dataType === 'fteOffers' ? (
                                     renderOffers(fteOffers)
