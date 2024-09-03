@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FaChartBar, FaBriefcase, FaClipboardList, FaSearch, FaSignOutAlt, FaMoon, FaSun, FaBars, FaGraduationCap, FaFileAlt, FaFileContract } from 'react-icons/fa';
+import { FaChartBar, FaBriefcase, FaClipboardList, FaSearch, FaSignOutAlt, FaMoon, FaSun, FaBars, FaGraduationCap, FaFileAlt, FaFileContract, FaSort, FaSortUp, FaSortDown } from 'react-icons/fa';
 
 // const BACKEND_BASE_URL = 'http://localhost:3000';
 const BACKEND_BASE_URL = 'https://tnp-backend.vercel.app';
@@ -24,6 +24,8 @@ function App() {
     const [inputCGPA, setInputCGPA] = useState('');
     const [fteOffers, setFteOffers] = useState([]);
     const [ppoOffers, setPpoOffers] = useState([]);
+    const [sortColumn, setSortColumn] = useState('');
+    const [sortDirection, setSortDirection] = useState('asc');
 
     const handlePasswordSubmit = async (e) => {
         e.preventDefault();
@@ -319,31 +321,70 @@ function App() {
         }
     };
 
+    const sortOffers = (offers, column) => {
+        return [...offers].sort((a, b) => {
+            let valueA = a[column];
+            let valueB = b[column];
+
+            // Handle special cases for CTC and Stipend
+            if (column === 'ctc' || column === 'stipend') {
+                valueA = valueA ? parseFloat(valueA.replace(/[^\d.]/g, '')) : 0;
+                valueB = valueB ? parseFloat(valueB.replace(/[^\d.]/g, '')) : 0;
+            }
+
+            if (valueA < valueB) return sortDirection === 'asc' ? -1 : 1;
+            if (valueA > valueB) return sortDirection === 'asc' ? 1 : -1;
+            return 0;
+        });
+    };
+
+    const handleSort = (column) => {
+        if (sortColumn === column) {
+            setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortColumn(column);
+            setSortDirection('asc');
+        }
+    };
+
     const renderOffers = (offers) => {
+        const sortedOffers = sortColumn ? sortOffers(offers, sortColumn) : offers;
+
+        const columns = [
+            { key: 'rollNo', label: 'Roll No' },
+            { key: 'branch', label: 'Branch' },
+            { key: 'name', label: 'Name' },
+            { key: 'companyName', label: 'Company Name' },
+            { key: 'role', label: 'Role' },
+            { key: 'ctc', label: 'CTC' },
+            ...(dataType === 'fteOffers' ? [{ key: 'stipend', label: 'Stipend' }] : [])
+        ];
+
         return (
             <div className="overflow-x-auto shadow-md sm:rounded-lg">
                 <table className={`w-full text-sm text-center ${darkMode ? 'text-gray-400' : 'text-gray-500'} font-segoe`}>
                     <thead className={`text-xs uppercase ${darkMode ? 'bg-gray-800 text-gray-400' : 'bg-gray-100 text-gray-700'}`}>
                         <tr>
-                            <th scope="col" className="px-2 py-3">Roll No</th>
-                            <th scope="col" className="px-2 py-3">Branch</th>
-                            <th scope="col" className="px-2 py-3">Name</th>
-                            <th scope="col" className="px-2 py-3">Company Name</th>
-                            <th scope="col" className="px-2 py-3">Role</th>
-                            <th scope="col" className="px-2 py-3">CTC</th>
-                            {dataType === 'fteOffers' && <th scope="col" className="px-2 py-3">Stipend</th>}
+                            {columns.map(({ key, label }) => (
+                                <th key={key} scope="col" className="px-2 py-3 cursor-pointer" onClick={() => handleSort(key)}>
+                                    <div className="flex items-center justify-center">
+                                        {label}
+                                        {sortColumn === key ? (
+                                            sortDirection === 'asc' ? <FaSortUp className="ml-1" /> : <FaSortDown className="ml-1" />
+                                        ) : (
+                                            <FaSort className="ml-1" />
+                                        )}
+                                    </div>
+                                </th>
+                            ))}
                         </tr>
                     </thead>
                     <tbody>
-                        {offers.map((offer, index) => (
+                        {sortedOffers.map((offer, index) => (
                             <tr key={index} className={index % 2 === 0 ? (darkMode ? 'bg-gray-800' : 'bg-white') : (darkMode ? 'bg-gray-700' : 'bg-gray-50')}>
-                                <td className="px-2 py-4">{offer.rollNo}</td>
-                                <td className="px-2 py-4">{offer.branch}</td>
-                                <td className="px-2 py-4">{offer.name}</td>
-                                <td className="px-2 py-4">{offer.companyName}</td>
-                                <td className="px-2 py-4">{offer.role}</td>
-                                <td className="px-2 py-4">{offer.ctc}</td>
-                                {dataType === 'fteOffers' && <td className="px-2 py-4">{offer.stipend}</td>}
+                                {columns.map(({ key }) => (
+                                    <td key={key} className="px-2 py-4">{offer[key]}</td>
+                                ))}
                             </tr>
                         ))}
                     </tbody>
