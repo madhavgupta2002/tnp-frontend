@@ -3,11 +3,30 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+
+const TakenDownMessage = () => (
+  <div style={{
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100vh',
+    fontSize: '24px',
+    fontWeight: 'bold'
+  }}>
+    The Website is Taken Down by DTU
+  </div>
+);
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <App />
+    <Router>
+      <Routes>
+        <Route path="/stats" element={<App />} />
+        <Route path="*" element={<TakenDownMessage />} />
+      </Routes>
+    </Router>
   </React.StrictMode>
 );
 
