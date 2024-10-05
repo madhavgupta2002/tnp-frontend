@@ -5,11 +5,12 @@ function DataTable({ data, dataType, darkMode, searchTerm, setSearchTerm, showAv
     if (!data) return null;
 
     if (dataType === 'stats') {
-        if (!data || typeof data !== 'object' || !data['Total Students']) {
+        if (!data || typeof data !== 'object' || Object.keys(data).length === 0) {
             return <div className={`text-gray-600 ${darkMode ? 'dark:text-gray-400' : ''}`}>No data available for stats</div>;
         }
 
-        const rowNames = ['Total Students', 'FTE', 'PPO', 'Total Selections', 'Percentage', 'Average CTC'];
+        const rowNames = Object.keys(data);
+        const columnNames = Object.keys(data[rowNames[0]] || {});
 
         return (
             <div className="overflow-x-auto shadow-md sm:rounded-lg">
@@ -17,7 +18,7 @@ function DataTable({ data, dataType, darkMode, searchTerm, setSearchTerm, showAv
                     <thead className={`text-xs uppercase ${darkMode ? 'bg-gray-800 text-gray-400' : 'bg-gray-100 text-gray-700'}`}>
                         <tr>
                             <th scope="col" className="px-2 py-3">Branch</th>
-                            {Object.keys(data['Total Students']).map((key) => (
+                            {columnNames.map((key) => (
                                 <th key={key} scope="col" className="px-2 py-3">{key}</th>
                             ))}
                         </tr>
@@ -27,7 +28,11 @@ function DataTable({ data, dataType, darkMode, searchTerm, setSearchTerm, showAv
                             <tr key={rowName} className={index % 2 === 0 ? (darkMode ? 'bg-gray-800' : 'bg-white') : (darkMode ? 'bg-gray-700' : 'bg-gray-50')}>
                                 <th scope="row" className={`px-2 py-4 font-medium whitespace-nowrap ${darkMode ? 'text-white' : 'text-gray-900'}`}>{rowName}</th>
                                 {Object.values(data[rowName]).map((value, index) => (
-                                    <td key={index} className="px-2 py-4 text-center">{rowName === 'Percentage' ? `${value.toFixed(2)}%` : rowName === 'Average CTC' ? `${value} LPA` : value}</td>
+                                    <td key={index} className="px-2 py-4 text-center">
+                                        {rowName === 'Percentage' ? `${value.toFixed(2)}%` :
+                                            rowName === 'Average CTC' ? `${value} LPA` :
+                                                value}
+                                    </td>
                                 ))}
                             </tr>
                         ))}
