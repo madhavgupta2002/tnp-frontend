@@ -30,7 +30,7 @@ function DataTable({ data, dataType, darkMode, searchTerm, setSearchTerm, showAv
                                 {Object.values(data[rowName]).map((value, index) => (
                                     <td key={index} className="px-2 py-4 text-center">
                                         {rowName === 'Percentage' ? `${value.toFixed(2)}%` :
-                                            rowName === 'Average CTC' ? `${value} LPA` :
+                                            rowName === 'Mean CTC' || rowName === 'Median CTC' || rowName === 'Mode CTC' ? `${value} LPA` :
                                                 value}
                                     </td>
                                 ))}
