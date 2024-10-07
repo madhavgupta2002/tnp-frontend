@@ -6,6 +6,7 @@ import AuthForm from './components/AuthForm';
 import DataTable from './components/DataTable';
 import OfferTable from './components/OfferTable';
 import CGPAAnalysis from './components/CGPAAnalysis';
+import SalaryDistribution from './components/SalaryDistribution';
 
 const BACKEND_BASE_URL = 'https://tnp-backend.vercel.app';
 // const BACKEND_BASE_URL = 'http://localhost:3000';
@@ -32,6 +33,9 @@ function App() {
     const [ppoOffers, setPpoOffers] = useState([]);
     const [sortColumn, setSortColumn] = useState('');
     const [sortDirection, setSortDirection] = useState('asc');
+    const [salaryData, setSalaryData] = useState([]);
+    const [histogramData, setHistogramData] = useState([]);
+    const [salaryStatistics, setSalaryStatistics] = useState({ mean: 0, median: 0, mode: 0 });
 
     const handlePasswordSubmit = async (e) => {
         e.preventDefault();
@@ -66,6 +70,12 @@ function App() {
             } else if (dataType === 'ppoOffers') {
                 fetchPpoOffers();
             }
+        }
+    }, [dataType, isAuthenticated]);
+
+    useEffect(() => {
+        if (isAuthenticated && dataType === 'salaryDistribution') {
+            fetchSalaryData();
         }
     }, [dataType, isAuthenticated]);
 
@@ -248,6 +258,45 @@ function App() {
         setSidebarOpen(!sidebarOpen);
     };
 
+    const fetchSalaryData = async () => {
+        setLoading(true);
+        try {
+            const response = await axios.get(`${BACKEND_BASE_URL}/ctc/all`, {
+                headers: {
+                    'Authorization': `Basic ${btoa(password)}`
+                }
+            });
+            setSalaryData(response.data);
+            const processedData = processData(response.data);
+            setHistogramData(processedData);
+            const stats = calculateStatistics(response.data.map(item => parseFloat(item.split(' ')[0])));
+            setSalaryStatistics(stats);
+        } catch (error) {
+            console.error('Error fetching salary data:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const processData = (rawData) => {
+
+        return rawData.map(item => parseFloat(item.split(' ')[0]));
+    };
+
+    const calculateStatistics = (data) => {
+        const sortedData = [...data].sort((a, b) => a - b);
+        const mean = data.reduce((sum, value) => sum + value, 0) / data.length;
+        const median = sortedData[Math.floor(sortedData.length / 2)];
+        const mode = Object.entries(
+            data.reduce((acc, val) => {
+                acc[val] = (acc[val] || 0) + 1;
+                return acc;
+            }, {})
+        ).reduce((a, b) => (a[1] > b[1] ? a : b))[0];
+
+        return { mean: parseFloat(mean.toFixed(2)), median, mode: parseFloat(mode) };
+    };
+
     return (
         <div className={`flex flex-col h-screen ${darkMode ? 'bg-gray-900' : 'bg-white'} font-sans`}>
             <Header
@@ -337,6 +386,13 @@ function App() {
                                         sortColumn={sortColumn}
                                         sortDirection={sortDirection}
                                         handleSort={handleSort}
+                                    />
+                                )}
+                                {dataType === 'salaryDistribution' && (
+                                    <SalaryDistribution
+                                        darkMode={darkMode}
+                                        histogramData={histogramData}
+                                        statistics={salaryStatistics}
                                     />
                                 )}
                             </div>

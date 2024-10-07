@@ -1,6 +1,5 @@
 import React from 'react';
-import { FaBriefcase, FaClipboardList, FaChartBar, FaGraduationCap, FaFileAlt, FaFileContract } from 'react-icons/fa';
-
+import { FaChartLine, FaBriefcase, FaClipboardList, FaChartBar, FaGraduationCap, FaFileAlt, FaFileContract } from 'react-icons/fa';
 function Sidebar({ darkMode, dataType, setDataType, sidebarOpen, setSidebarOpen, totalPlaced, isAuthenticated }) {
     const navItems = [
         { type: 'fte', icon: FaBriefcase, label: 'FTE Data' },
@@ -9,6 +8,7 @@ function Sidebar({ darkMode, dataType, setDataType, sidebarOpen, setSidebarOpen,
         { type: 'cgpaAnalysis', icon: FaGraduationCap, label: 'CGPA Analysis' },
         { type: 'fteOffers', icon: FaFileAlt, label: 'FTE Offers' },
         { type: 'ppoOffers', icon: FaFileContract, label: 'PPO Offers' },
+        { type: 'salaryDistribution', icon: FaChartLine, label: 'Salary Distribution' },
     ];
 
     return (
