@@ -268,17 +268,17 @@ function UnplacedStudents({ cgpaData, darkMode }) {
                 <table className={`w-full text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} font-segoe`}>
                     <thead className={`text-xs uppercase ${darkMode ? 'bg-gray-800 text-gray-400' : 'bg-gray-100 text-gray-700'}`}>
                         <tr>
-                            <th scope="col" className="px-2 py-1">S.No.</th>
-                            <th scope="col" className="px-2 py-1 cursor-pointer" onClick={() => handleSort('roll')}>
+                            <th scope="col" className="px-2 py-1 text-left">S.No.</th>
+                            <th scope="col" className="px-2 py-1 cursor-pointer text-left" onClick={() => handleSort('roll')}>
                                 Roll No. {sortColumn === 'roll' && (sortDirection === 'asc' ? '▲' : '▼')}
                             </th>
-                            <th scope="col" className="px-2 py-1 cursor-pointer" onClick={() => handleSort('name')}>
+                            <th scope="col" className="px-2 py-1 cursor-pointer text-left" onClick={() => handleSort('name')}>
                                 Name {sortColumn === 'name' && (sortDirection === 'asc' ? '▲' : '▼')}
                             </th>
-                            <th scope="col" className="px-2 py-1 cursor-pointer" onClick={() => handleSort('branch')}>
+                            <th scope="col" className="px-2 py-1 cursor-pointer text-left" onClick={() => handleSort('branch')}>
                                 Branch {sortColumn === 'branch' && (sortDirection === 'asc' ? '▲' : '▼')}
                             </th>
-                            <th scope="col" className="px-2 py-1 cursor-pointer" onClick={() => handleSort('cgpa')}>
+                            <th scope="col" className="px-2 py-1 cursor-pointer text-left" onClick={() => handleSort('cgpa')}>
                                 CGPA {sortColumn === 'cgpa' && (sortDirection === 'asc' ? '▲' : '▼')}
                             </th>
                         </tr>
