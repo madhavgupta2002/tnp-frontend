@@ -7,9 +7,10 @@ import DataTable from './components/DataTable';
 import OfferTable from './components/OfferTable';
 import CGPAAnalysis from './components/CGPAAnalysis';
 import SalaryDistribution from './components/SalaryDistribution';
+import UnplacedStudents from './components/UnplacedStudents';
 
-const BACKEND_BASE_URL = 'https://tnp-backend.vercel.app';
 // const BACKEND_BASE_URL = 'http://localhost:3000';
+const BACKEND_BASE_URL = 'https://tnp-backend.vercel.app';
 
 function App() {
     const [activeData, setActiveData] = useState(null);
@@ -36,6 +37,7 @@ function App() {
     const [salaryData, setSalaryData] = useState([]);
     const [histogramData, setHistogramData] = useState([]);
     const [salaryStatistics, setSalaryStatistics] = useState({ mean: 0, median: 0, mode: 0 });
+    const [cgpaData, setCgpaData] = useState([]);
 
     const handlePasswordSubmit = async (e) => {
         e.preventDefault();
@@ -76,6 +78,12 @@ function App() {
     useEffect(() => {
         if (isAuthenticated && dataType === 'salaryDistribution') {
             fetchSalaryData();
+        }
+    }, [dataType, isAuthenticated]);
+
+    useEffect(() => {
+        if (isAuthenticated && dataType === 'unplacedStudents') {
+            fetchCGPAData();
         }
     }, [dataType, isAuthenticated]);
 
@@ -297,6 +305,22 @@ function App() {
         return { mean: parseFloat(mean.toFixed(2)), median, mode: parseFloat(mode) };
     };
 
+    const fetchCGPAData = async () => {
+        setLoading(true);
+        try {
+            const response = await axios.get(`${BACKEND_BASE_URL}/cgpa`, {
+                headers: {
+                    'Authorization': `Basic ${btoa(password)}`
+                }
+            });
+            setCgpaData(response.data);
+        } catch (error) {
+            console.error('Error fetching CGPA data:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div className={`flex flex-col h-screen ${darkMode ? 'bg-gray-900' : 'bg-white'} font-sans`}>
             <Header
@@ -341,7 +365,8 @@ function App() {
                                                 dataType === 'cgpaAnalysis' ? 'CGPA Analysis' :
                                                     dataType === 'fteOffers' ? 'FTE Offers' :
                                                         dataType === 'ppoOffers' ? 'PPO Offers' :
-                                                            dataType === 'salaryDistribution' ? 'Salary Distribution' : ''}
+                                                            dataType === 'salaryDistribution' ? 'Salary Distribution' :
+                                                                dataType === 'unplacedStudents' ? 'Unplaced Students' : ''}
                                 </h3>
                                 {dataType === 'cgpaAnalysis' && (
                                     <CGPAAnalysis
@@ -381,7 +406,13 @@ function App() {
                                         statistics={salaryStatistics}
                                     />
                                 )}
-                                {dataType !== 'cgpaAnalysis' && dataType !== 'fteOffers' && dataType !== 'ppoOffers' && dataType !== 'salaryDistribution' && (
+                                {dataType === 'unplacedStudents' && (
+                                    <UnplacedStudents
+                                        cgpaData={cgpaData}
+                                        darkMode={darkMode}
+                                    />
+                                )}
+                                {dataType !== 'cgpaAnalysis' && dataType !== 'fteOffers' && dataType !== 'ppoOffers' && dataType !== 'salaryDistribution' && dataType !== 'unplacedStudents' && (
                                     <DataTable
                                         data={activeData}
                                         dataType={dataType}
