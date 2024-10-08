@@ -340,9 +340,10 @@ function App() {
                                             dataType === 'stats' ? 'Stats' :
                                                 dataType === 'cgpaAnalysis' ? 'CGPA Analysis' :
                                                     dataType === 'fteOffers' ? 'FTE Offers' :
-                                                        dataType === 'ppoOffers' ? 'PPO Offers' : ''}
+                                                        dataType === 'ppoOffers' ? 'PPO Offers' :
+                                                            dataType === 'salaryDistribution' ? 'Salary Distribution' : ''}
                                 </h3>
-                                {dataType === 'cgpaAnalysis' ? (
+                                {dataType === 'cgpaAnalysis' && (
                                     <CGPAAnalysis
                                         inputCGPALower={inputCGPALower}
                                         setInputCGPALower={setInputCGPALower}
@@ -352,7 +353,8 @@ function App() {
                                         activeData={activeData}
                                         darkMode={darkMode}
                                     />
-                                ) : dataType === 'fteOffers' ? (
+                                )}
+                                {dataType === 'fteOffers' && (
                                     <OfferTable
                                         offers={fteOffers}
                                         dataType={dataType}
@@ -361,7 +363,8 @@ function App() {
                                         sortDirection={sortDirection}
                                         handleSort={handleSort}
                                     />
-                                ) : dataType === 'ppoOffers' ? (
+                                )}
+                                {dataType === 'ppoOffers' && (
                                     <OfferTable
                                         offers={ppoOffers}
                                         dataType={dataType}
@@ -370,7 +373,15 @@ function App() {
                                         sortDirection={sortDirection}
                                         handleSort={handleSort}
                                     />
-                                ) : (
+                                )}
+                                {dataType === 'salaryDistribution' && (
+                                    <SalaryDistribution
+                                        darkMode={darkMode}
+                                        histogramData={histogramData}
+                                        statistics={salaryStatistics}
+                                    />
+                                )}
+                                {dataType !== 'cgpaAnalysis' && dataType !== 'fteOffers' && dataType !== 'ppoOffers' && dataType !== 'salaryDistribution' && (
                                     <DataTable
                                         data={activeData}
                                         dataType={dataType}
@@ -386,13 +397,6 @@ function App() {
                                         sortColumn={sortColumn}
                                         sortDirection={sortDirection}
                                         handleSort={handleSort}
-                                    />
-                                )}
-                                {dataType === 'salaryDistribution' && (
-                                    <SalaryDistribution
-                                        darkMode={darkMode}
-                                        histogramData={histogramData}
-                                        statistics={salaryStatistics}
                                     />
                                 )}
                             </div>
