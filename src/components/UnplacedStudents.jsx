@@ -15,6 +15,9 @@ function UnplacedStudents({ cgpaData, darkMode }) {
     const [topCount, setTopCount] = useState('');
     const [customLowerRange, setCustomLowerRange] = useState('');
     const [customUpperRange, setCustomUpperRange] = useState('');
+    const [rollNumberLowerRange, setRollNumberLowerRange] = useState('');
+    const [rollNumberUpperRange, setRollNumberUpperRange] = useState('');
+    const [selectedBranchForRoll, setSelectedBranchForRoll] = useState('');
 
     const branchOrder = ['AE', 'BT', 'CE', 'CH', 'CO', 'EC', 'EE', 'EN', 'EP', 'IT', 'MC', 'ME', 'PE', 'SE'];
     const cgpaRanges = Array.from({ length: 21 }, (_, i) => (i * 0.5).toFixed(1));
@@ -100,6 +103,31 @@ function UnplacedStudents({ cgpaData, darkMode }) {
         } else {
             applyFilters(searchTerm, placementFilter, selectedBranches, lowerRange, upperRange);
         }
+    };
+
+    const handleRollNumberRangeChange = (e, isLower) => {
+        const value = e.target.value;
+        if (isLower) {
+            setRollNumberLowerRange(value);
+        } else {
+            setRollNumberUpperRange(value);
+        }
+    };
+
+    const handleBranchForRollChange = (e) => {
+        setSelectedBranchForRoll(e.target.value);
+    };
+
+    const applyRollNumberFilter = () => {
+        const filtered = cgpaData.filter(student => {
+            const rollNumber = parseInt(student.roll.slice(-3));
+            return (
+                (!selectedBranchForRoll || student.branch === selectedBranchForRoll) &&
+                (!rollNumberLowerRange || rollNumber >= parseInt(rollNumberLowerRange)) &&
+                (!rollNumberUpperRange || rollNumber <= parseInt(rollNumberUpperRange))
+            );
+        });
+        setFilteredData(sortData(filtered, sortColumn, sortDirection));
     };
 
     const sortData = (data, column, direction) => {
@@ -251,7 +279,7 @@ function UnplacedStudents({ cgpaData, darkMode }) {
             {showAdvancedFilters && (
                 <div className="mb-4">
                     <div className="mb-2">
-                        <label className="text-sm font-semibold">Top Students:</label>
+                        <label className={`text-sm font-semibold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Top Students:</label>
                         <input
                             type="number"
                             value={topCount}
@@ -261,7 +289,7 @@ function UnplacedStudents({ cgpaData, darkMode }) {
                         />
                     </div>
                     <div className="mb-2">
-                        <p className="text-sm font-semibold mb-1">Lower Range: {lowerRange || 'Unselected'}</p>
+                        <p className={`text-sm font-semibold mb-1 ${darkMode ? 'text-white' : 'text-gray-800'}`}>Lower Range: {lowerRange || 'Unselected'}</p>
                         <div className="flex flex-wrap justify-center items-center">
                             {cgpaRanges.map(range => (
                                 <button
@@ -285,7 +313,7 @@ function UnplacedStudents({ cgpaData, darkMode }) {
                         </div>
                     </div>
                     <div className="mb-2">
-                        <p className="text-sm font-semibold mb-1">Upper Range: {upperRange || 'Unselected'}</p>
+                        <p className={`text-sm font-semibold mb-1 ${darkMode ? 'text-white' : 'text-gray-800'}`}>Upper Range: {upperRange || 'Unselected'}</p>
                         <div className="flex flex-wrap justify-center items-center">
                             {cgpaRanges.map(range => (
                                 <button
@@ -306,6 +334,45 @@ function UnplacedStudents({ cgpaData, darkMode }) {
                                 min="0"
                                 max="10"
                             />
+                        </div>
+                    </div>
+                    <div className="mb-2">
+                        <p className={`text-sm font-semibold mb-1 ${darkMode ? 'text-white' : 'text-gray-800'}`}>Roll Number Range</p>
+                        <div className="flex flex-wrap justify-center items-center">
+                            <select
+                                value={selectedBranchForRoll}
+                                onChange={handleBranchForRollChange}
+                                className={`mr-2 px-2 py-1 rounded border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300'}`}
+                            >
+                                <option value="">Select Branch</option>
+                                {branchOrder.map(branch => (
+                                    <option key={branch} value={branch}>{branch}</option>
+                                ))}
+                            </select>
+                            <input
+                                type="number"
+                                value={rollNumberLowerRange}
+                                onChange={(e) => handleRollNumberRangeChange(e, true)}
+                                placeholder="Lower"
+                                className={`mr-2 px-2 py-1 w-20 rounded border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300'}`}
+                                min="1"
+                                max="999"
+                            />
+                            <input
+                                type="number"
+                                value={rollNumberUpperRange}
+                                onChange={(e) => handleRollNumberRangeChange(e, false)}
+                                placeholder="Upper"
+                                className={`mr-2 px-2 py-1 w-20 rounded border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300'}`}
+                                min="1"
+                                max="999"
+                            />
+                            <button
+                                onClick={applyRollNumberFilter}
+                                className={`px-2 py-1 text-xs rounded ${darkMode ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-800'}`}
+                            >
+                                Apply
+                            </button>
                         </div>
                     </div>
                 </div>
