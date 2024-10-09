@@ -94,7 +94,8 @@ function UnplacedStudents({ cgpaData, darkMode }) {
         const value = e.target.value;
         setTopCount(value);
         if (value && !isNaN(value)) {
-            const topStudents = sortData(cgpaData, 'cgpa', 'desc').slice(0, parseInt(value));
+            const currentFiltered = applyFilters(searchTerm, placementFilter, selectedBranches, lowerRange, upperRange, false);
+            const topStudents = sortData(currentFiltered, 'cgpa', 'desc').slice(0, parseInt(value));
             setFilteredData(topStudents);
         } else {
             applyFilters(searchTerm, placementFilter, selectedBranches, lowerRange, upperRange);
@@ -109,7 +110,7 @@ function UnplacedStudents({ cgpaData, darkMode }) {
         });
     };
 
-    const applyFilters = (term, placement, branches, lower, upper) => {
+    const applyFilters = (term, placement, branches, lower, upper, updateState = true) => {
         let filtered = cgpaData.filter(student =>
             (student.name.toLowerCase().includes(term) ||
                 student.roll.toLowerCase().includes(term) ||
@@ -123,7 +124,10 @@ function UnplacedStudents({ cgpaData, darkMode }) {
         );
 
         filtered = sortData(filtered, sortColumn, sortDirection);
-        setFilteredData(filtered);
+        if (updateState) {
+            setFilteredData(filtered);
+        }
+        return filtered;
     };
 
     const handleSort = (column) => {
@@ -131,6 +135,62 @@ function UnplacedStudents({ cgpaData, darkMode }) {
         setSortColumn(column);
         setSortDirection(newDirection);
         setFilteredData(sortData(filteredData, column, newDirection));
+    };
+
+    const renderPlacementDistribution = () => {
+        const totalStudents = filteredData.length;
+        const placedStudents = filteredData.filter(student => student.placed).length;
+        const unplacedStudents = totalStudents - placedStudents;
+
+        // Determine the current sorting column (default to 'cgpa')
+        const currentSortColumn = sortColumn || 'cgpa';
+
+        // Get min and max values for the current sorting column
+        const minValue = Math.min(...filteredData.map(student => student[currentSortColumn]));
+        const maxValue = Math.max(...filteredData.map(student => student[currentSortColumn]));
+
+        // Determine if the scale should be reversed based on sort direction
+        const isReversed = sortDirection === 'desc';
+
+        // Function to calculate position of a value in the distribution
+        const getPosition = (value) => {
+            const studentsBelow = filteredData.filter(student => student[currentSortColumn] <= value).length;
+            const position = studentsBelow / totalStudents;
+            return isReversed ? 1 - position : position;
+        };
+
+        // Generate marks for CGPA scale
+        const cgpaMarks = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].filter(mark => mark >= minValue && mark <= maxValue);
+
+        return (
+            <div className="w-full mb-4">
+                <div className="h-8 flex rounded overflow-hidden">
+                    {filteredData.map((student, index) => (
+                        <div
+                            key={index}
+                            className={`h-full ${student.placed ? (darkMode ? 'bg-green-600' : 'bg-green-400') : (darkMode ? 'bg-gray-600' : 'bg-gray-300')}`}
+                            style={{ width: `${100 / totalStudents}%` }}
+                        ></div>
+                    ))}
+                </div>
+                <div className="relative mt-1 h-4">
+                    {cgpaMarks.map((mark, index) => (
+                        <div key={index} className="absolute" style={{ left: `${getPosition(mark) * 100}%`, transform: 'translateX(-50%)' }}>
+                            <div className={`h-2 w-px ${darkMode ? 'bg-gray-400' : 'bg-gray-600'}`}></div>
+                            <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{mark}</span>
+                        </div>
+                    ))}
+                </div>
+                <div className="flex justify-between mt-1 text-xs">
+                    <span className={darkMode ? 'text-gray-400' : 'text-gray-600'}>
+                        Unplaced: {unplacedStudents} ({((unplacedStudents / totalStudents) * 100).toFixed(1)}%)
+                    </span>
+                    <span className={darkMode ? 'text-gray-400' : 'text-gray-600'}>
+                        Placed: {placedStudents} ({((placedStudents / totalStudents) * 100).toFixed(1)}%)
+                    </span>
+                </div>
+            </div>
+        );
     };
 
     return (
@@ -264,6 +324,7 @@ function UnplacedStudents({ cgpaData, darkMode }) {
                     <span className="font-bold text-lg">{filteredData.length}</span>
                 </div>
             </div>
+            {renderPlacementDistribution()}
             <div className="overflow-x-auto shadow-md sm:rounded-lg">
                 <table className={`w-full text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} font-segoe`}>
                     <thead className={`text-xs uppercase ${darkMode ? 'bg-gray-800 text-gray-400' : 'bg-gray-100 text-gray-700'}`}>
