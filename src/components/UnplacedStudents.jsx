@@ -5,6 +5,7 @@ function UnplacedStudents({ cgpaData, darkMode }) {
     const [filteredData, setFilteredData] = useState([]);
     const [placementFilter, setPlacementFilter] = useState('all');
     const [selectedBranches, setSelectedBranches] = useState(['all']);
+    const [selectedGenders, setSelectedGenders] = useState(['all']);
     const [sortColumn, setSortColumn] = useState('cgpa');
     const [sortDirection, setSortDirection] = useState('desc');
     const [lowerRange, setLowerRange] = useState(null);
@@ -20,6 +21,7 @@ function UnplacedStudents({ cgpaData, darkMode }) {
     const [selectedBranchForRoll, setSelectedBranchForRoll] = useState('');
 
     const branchOrder = ['AE', 'BT', 'CE', 'CH', 'CO', 'EC', 'EE', 'EN', 'EP', 'IT', 'MC', 'ME', 'PE', 'SE'];
+    const genderOptions = ['Male', 'Female', 'Other'];
     const cgpaRanges = Array.from({ length: 21 }, (_, i) => (i * 0.5).toFixed(1));
 
     useEffect(() => {
@@ -36,14 +38,14 @@ function UnplacedStudents({ cgpaData, darkMode }) {
     const handleSearch = (e) => {
         const term = e.target.value.toLowerCase();
         setSearchTerm(term);
-        applyFilters(term, placementFilter, selectedBranches, lowerRange, upperRange);
+        applyFilters(term, placementFilter, selectedBranches, selectedGenders, lowerRange, upperRange);
     };
 
     const handlePlacementFilter = (filter) => {
         setPlacementFilter(filter);
         setSortColumn('cgpa');
         setSortDirection('desc');
-        applyFilters(searchTerm, filter, selectedBranches, lowerRange, upperRange);
+        applyFilters(searchTerm, filter, selectedBranches, selectedGenders, lowerRange, upperRange);
     };
 
     const handleBranchFilter = (branch) => {
@@ -63,7 +65,25 @@ function UnplacedStudents({ cgpaData, darkMode }) {
         setSelectedBranches(newSelectedBranches);
         setSortColumn('cgpa');
         setSortDirection('desc');
-        applyFilters(searchTerm, placementFilter, newSelectedBranches, lowerRange, upperRange);
+        applyFilters(searchTerm, placementFilter, newSelectedBranches, selectedGenders, lowerRange, upperRange);
+    };
+
+    const handleGenderFilter = (gender) => {
+        let newSelectedGenders;
+        if (gender === 'all') {
+            newSelectedGenders = ['all'];
+        } else {
+            newSelectedGenders = selectedGenders.includes('all') ? [gender] :
+                selectedGenders.includes(gender) ?
+                    selectedGenders.filter(g => g !== gender) :
+                    [...selectedGenders, gender];
+
+            if (newSelectedGenders.length === 0) {
+                newSelectedGenders = ['all'];
+            }
+        }
+        setSelectedGenders(newSelectedGenders);
+        applyFilters(searchTerm, placementFilter, selectedBranches, newSelectedGenders, lowerRange, upperRange);
     };
 
     const handleRangeFilter = (range, isLower) => {
@@ -74,7 +94,7 @@ function UnplacedStudents({ cgpaData, darkMode }) {
             setUpperRange(upperRange === range ? null : range);
             setCustomUpperRange('');
         }
-        applyFilters(searchTerm, placementFilter, selectedBranches,
+        applyFilters(searchTerm, placementFilter, selectedBranches, selectedGenders,
             isLower ? (lowerRange === range ? null : range) : lowerRange,
             !isLower ? (upperRange === range ? null : range) : upperRange);
     };
@@ -88,7 +108,7 @@ function UnplacedStudents({ cgpaData, darkMode }) {
             setCustomUpperRange(value);
             setUpperRange(value);
         }
-        applyFilters(searchTerm, placementFilter, selectedBranches,
+        applyFilters(searchTerm, placementFilter, selectedBranches, selectedGenders,
             isLower ? value : lowerRange,
             !isLower ? value : upperRange);
     };
@@ -97,11 +117,11 @@ function UnplacedStudents({ cgpaData, darkMode }) {
         const value = e.target.value;
         setTopCount(value);
         if (value && !isNaN(value)) {
-            const currentFiltered = applyFilters(searchTerm, placementFilter, selectedBranches, lowerRange, upperRange, false);
+            const currentFiltered = applyFilters(searchTerm, placementFilter, selectedBranches, selectedGenders, lowerRange, upperRange, false);
             const topStudents = sortData(currentFiltered, 'cgpa', 'desc').slice(0, parseInt(value));
             setFilteredData(topStudents);
         } else {
-            applyFilters(searchTerm, placementFilter, selectedBranches, lowerRange, upperRange);
+            applyFilters(searchTerm, placementFilter, selectedBranches, selectedGenders, lowerRange, upperRange);
         }
     };
 
@@ -138,7 +158,7 @@ function UnplacedStudents({ cgpaData, darkMode }) {
         });
     };
 
-    const applyFilters = (term, placement, branches, lower, upper, updateState = true) => {
+    const applyFilters = (term, placement, branches, genders, lower, upper, updateState = true) => {
         let filtered = cgpaData.filter(student =>
             (student.name.toLowerCase().includes(term) ||
                 student.roll.toLowerCase().includes(term) ||
@@ -147,6 +167,7 @@ function UnplacedStudents({ cgpaData, darkMode }) {
                 (placement === 'placed' && student.placed) ||
                 (placement === 'unplaced' && !student.placed)) &&
             (branches.includes('all') || branches.includes(student.branch)) &&
+            (genders.includes('all') || genders.includes(student.gender)) &&
             (!lower || student.cgpa >= parseFloat(lower)) &&
             (!upper || student.cgpa <= parseFloat(upper))
         );
@@ -170,24 +191,19 @@ function UnplacedStudents({ cgpaData, darkMode }) {
         const placedStudents = filteredData.filter(student => student.placed).length;
         const unplacedStudents = totalStudents - placedStudents;
 
-        // Determine the current sorting column (default to 'cgpa')
         const currentSortColumn = sortColumn || 'cgpa';
 
-        // Get min and max values for the current sorting column
         const minValue = Math.min(...filteredData.map(student => student[currentSortColumn]));
         const maxValue = Math.max(...filteredData.map(student => student[currentSortColumn]));
 
-        // Determine if the scale should be reversed based on sort direction
         const isReversed = sortDirection === 'desc';
 
-        // Function to calculate position of a value in the distribution
         const getPosition = (value) => {
             const studentsBelow = filteredData.filter(student => student[currentSortColumn] <= value).length;
             const position = studentsBelow / totalStudents;
             return isReversed ? 1 - position : position;
         };
 
-        // Generate marks for CGPA scale
         const cgpaMarks = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].filter(mark => mark >= minValue && mark <= maxValue);
 
         return (
@@ -267,6 +283,23 @@ function UnplacedStudents({ cgpaData, darkMode }) {
                         className={`mr-1 mb-1 px-2 py-1 text-xs rounded ${selectedBranches.includes(branch) ? 'bg-black text-white' : 'bg-gray-200 text-gray-800'}`}
                     >
                         {branch}
+                    </button>
+                ))}
+            </div>
+            <div className="mb-2 flex flex-wrap justify-center">
+                <button
+                    onClick={() => handleGenderFilter('all')}
+                    className={`mr-1 mb-1 px-2 py-1 text-xs rounded ${selectedGenders.includes('all') ? 'bg-black text-white' : 'bg-gray-200 text-gray-800'}`}
+                >
+                    All Genders
+                </button>
+                {genderOptions.map(gender => (
+                    <button
+                        key={gender}
+                        onClick={() => handleGenderFilter(gender)}
+                        className={`mr-1 mb-1 px-2 py-1 text-xs rounded ${selectedGenders.includes(gender) ? 'bg-black text-white' : 'bg-gray-200 text-gray-800'}`}
+                    >
+                        {gender}
                     </button>
                 ))}
             </div>
@@ -406,6 +439,9 @@ function UnplacedStudents({ cgpaData, darkMode }) {
                             <th scope="col" className="px-2 py-1 cursor-pointer text-left" onClick={() => handleSort('branch')}>
                                 Branch {sortColumn === 'branch' && (sortDirection === 'asc' ? '▲' : '▼')}
                             </th>
+                            <th scope="col" className="px-2 py-1 cursor-pointer text-left" onClick={() => handleSort('gender')}>
+                                Gender {sortColumn === 'gender' && (sortDirection === 'asc' ? '▲' : '▼')}
+                            </th>
                             <th scope="col" className="px-2 py-1 cursor-pointer text-left" onClick={() => handleSort('cgpa')}>
                                 CGPA {sortColumn === 'cgpa' && (sortDirection === 'asc' ? '▲' : '▼')}
                             </th>
@@ -419,6 +455,7 @@ function UnplacedStudents({ cgpaData, darkMode }) {
                                 <td className="px-2 py-1">{student.roll}</td>
                                 <td className="px-2 py-1">{student.name}</td>
                                 <td className="px-2 py-1">{student.branch}</td>
+                                <td className="px-2 py-1">{student.gender}</td>
                                 <td className="px-2 py-1">{student.cgpa.toFixed(2)}</td>
                             </tr>
                         ))}
