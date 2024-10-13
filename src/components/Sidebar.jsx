@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaChartLine, FaBriefcase, FaClipboardList, FaChartBar, FaGraduationCap, FaFileAlt, FaFileContract, FaUserGraduate } from 'react-icons/fa';
+import { FaChartLine, FaBriefcase, FaClipboardList, FaChartBar, FaGraduationCap, FaFileAlt, FaFileContract, FaUserGraduate, FaListAlt } from 'react-icons/fa';
 
 function Sidebar({ darkMode, dataType, setDataType, sidebarOpen, setSidebarOpen, totalPlaced, isAuthenticated }) {
     const navItems = [
@@ -11,6 +11,7 @@ function Sidebar({ darkMode, dataType, setDataType, sidebarOpen, setSidebarOpen,
         { type: 'ppoOffers', icon: FaFileContract, label: 'PPO Offers' },
         { type: 'salaryDistribution', icon: FaChartLine, label: 'Salary Distribution' },
         { type: 'unplacedStudents', icon: FaUserGraduate, label: 'Unplaced Students' },
+        { type: 'jobListing', icon: FaListAlt, label: 'Job Listing' },
     ];
 
     return (

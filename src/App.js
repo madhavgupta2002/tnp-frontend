@@ -8,6 +8,8 @@ import OfferTable from './components/OfferTable';
 import CGPAAnalysis from './components/CGPAAnalysis';
 import SalaryDistribution from './components/SalaryDistribution';
 import UnplacedStudents from './components/UnplacedStudents';
+import JobListing from './components/JobListing';
+
 
 // const BACKEND_BASE_URL = 'http://localhost:3000';
 const BACKEND_BASE_URL = 'https://tnp-backend.vercel.app';
@@ -38,6 +40,7 @@ function App() {
     const [histogramData, setHistogramData] = useState([]);
     const [salaryStatistics, setSalaryStatistics] = useState({ mean: 0, median: 0, mode: 0 });
     const [cgpaData, setCgpaData] = useState([]);
+    const [jobListingData, setJobListingData] = useState(null);
 
     const handlePasswordSubmit = async (e) => {
         e.preventDefault();
@@ -86,7 +89,27 @@ function App() {
             fetchCGPAData();
         }
     }, [dataType, isAuthenticated]);
+    useEffect(() => {
+        if (isAuthenticated && dataType === 'jobListing') {
+            fetchJobListingData();
+        }
+    }, [dataType, isAuthenticated]);
 
+    const fetchJobListingData = async () => {
+        setLoading(true);
+        try {
+            const response = await axios.get(`${BACKEND_BASE_URL}/job-listings`, {
+                headers: {
+                    'Authorization': `Basic ${btoa(password)}`
+                }
+            });
+            setJobListingData(response.data);
+        } catch (error) {
+            console.error('Error fetching job listing data:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
     const fetchData = async (type) => {
         setLoading(true);
         try {
@@ -366,7 +389,8 @@ function App() {
                                                     dataType === 'fteOffers' ? 'FTE Offers' :
                                                         dataType === 'ppoOffers' ? 'PPO Offers' :
                                                             dataType === 'salaryDistribution' ? 'Salary Distribution' :
-                                                                dataType === 'unplacedStudents' ? 'Unplaced Students' : ''}
+                                                                dataType === 'unplacedStudents' ? 'Unplaced Students' :
+                                                                    dataType === 'jobListing' ? 'Job Listings' : ''}
                                 </h3>
                                 {dataType === 'cgpaAnalysis' && (
                                     <CGPAAnalysis
@@ -412,7 +436,13 @@ function App() {
                                         darkMode={darkMode}
                                     />
                                 )}
-                                {dataType !== 'cgpaAnalysis' && dataType !== 'fteOffers' && dataType !== 'ppoOffers' && dataType !== 'salaryDistribution' && dataType !== 'unplacedStudents' && (
+                                {dataType === 'jobListing' && (
+                                    <JobListing
+                                        data={jobListingData}
+                                        darkMode={darkMode}
+                                    />
+                                )}
+                                {dataType !== 'cgpaAnalysis' && dataType !== 'fteOffers' && dataType !== 'ppoOffers' && dataType !== 'salaryDistribution' && dataType !== 'unplacedStudents' && dataType !== 'jobListing' && (
                                     <DataTable
                                         data={activeData}
                                         dataType={dataType}
