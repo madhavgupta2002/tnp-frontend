@@ -9,6 +9,8 @@ function JobListing({ data, darkMode }) {
     const [filteredData, setFilteredData] = useState([]);
     const [recurringCompanies, setRecurringCompanies] = useState({});
     const [activeFilter, setActiveFilter] = useState('all');
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
 
     useEffect(() => {
         if (data) {
@@ -54,6 +56,22 @@ function JobListing({ data, darkMode }) {
         );
         setFilteredData(filtered.map((job, index) => ({ ...job, serialNumber: index + 1 })));
     };
+
+    const handleDateFilter = () => {
+        if (data && data[activeTab]) {
+            const filtered = data[activeTab].filter(job => {
+                const jobDate = new Date(job['Posted on'].split(' ')[0].split('-').reverse().join('-'));
+                const start = startDate ? new Date(startDate) : new Date(0);
+                const end = endDate ? new Date(endDate) : new Date();
+                return jobDate >= start && jobDate <= end;
+            });
+            setFilteredData(filtered.map((job, index) => ({ ...job, serialNumber: index + 1 })));
+        }
+    };
+
+    useEffect(() => {
+        handleDateFilter();
+    }, [startDate, endDate, data, activeTab]);
 
     const sortedData = [...filteredData].sort((a, b) => {
         if (sortColumn === 'Posted on') {
@@ -130,6 +148,12 @@ function JobListing({ data, darkMode }) {
         };
     };
 
+    const setTodayAsEndDate = () => {
+        const today = new Date();
+        const formattedDate = today.toISOString().split('T')[0];
+        setEndDate(formattedDate);
+    };
+
     return (
         <div className={`mt-8 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
             <h2 className="text-2xl font-bold mb-4">Job Listing</h2>
@@ -188,6 +212,34 @@ function JobListing({ data, darkMode }) {
                     <span className="font-bold">{getStats().nonRecurringCompanies}</span>
                     <span className="text-xs mt-1">Non-Recurring Jobs:</span>
                     <span className="font-bold">{getStats().nonRecurringJobs}</span>
+                </div>
+            </div>
+            <div className="flex justify-center items-center space-x-4 mb-4">
+                <div className="flex items-center space-x-2">
+                    <label htmlFor="startDate" className="text-sm">Start Date:</label>
+                    <input
+                        type="date"
+                        id="startDate"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        className={`px-2 py-1 rounded border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300'}`}
+                    />
+                </div>
+                <div className="flex items-center space-x-2">
+                    <label htmlFor="endDate" className="text-sm">End Date:</label>
+                    <input
+                        type="date"
+                        id="endDate"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        className={`px-2 py-1 rounded border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300'}`}
+                    />
+                    <button
+                        onClick={setTodayAsEndDate}
+                        className={`px-2 py-1 text-xs rounded ${darkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'} text-white`}
+                    >
+                        Set Today
+                    </button>
                 </div>
             </div>
             <input
