@@ -111,7 +111,7 @@ function JobListing({ data, darkMode }) {
         } else if (year === '2K20' && !recurringCompanies[`${otherYear} ${category}`]?.has(lowerCaseName)) {
             return darkMode ? 'bg-yellow-800' : 'bg-yellow-200';
         }
-        return '';
+        return darkMode ? 'bg-gray-800' : 'bg-white';
     };
 
     const getButtonStyle = (isActive) => {
@@ -213,7 +213,7 @@ function JobListing({ data, darkMode }) {
                     </thead>
                     <tbody>
                         {sortedData.map((job) => (
-                            <tr key={job.serialNumber} className={`${darkMode ? 'bg-gray-800' : 'bg-white'} ${getCompanyColor(job['Company Name'])}`}>
+                            <tr key={job.serialNumber} className={`${getCompanyColor(job['Company Name'])}`}>
                                 <td className="px-2 py-1 whitespace-nowrap">{job.serialNumber}</td>
                                 <td className="px-2 py-1 whitespace-normal break-words">{job['Job Post Name']}</td>
                                 <td className="px-2 py-1 whitespace-normal break-words">{job['Company Name']}</td>
