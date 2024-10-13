@@ -71,10 +71,8 @@ function JobListing({ data, darkMode }) {
         const otherYear = year === '2K21' ? '2K20' : '2K21';
         if (activeFilter === 'recurring') {
             return recurringCompanies[activeTab]?.has(lowerCaseName);
-        } else if (activeFilter === 'new') {
-            return year === '2K21' && !recurringCompanies[`${otherYear} ${category}`]?.has(lowerCaseName);
-        } else if (activeFilter === 'old') {
-            return year === '2K20' && !recurringCompanies[`${otherYear} ${category}`]?.has(lowerCaseName);
+        } else if (activeFilter === 'non-recurring') {
+            return !recurringCompanies[activeTab]?.has(lowerCaseName);
         }
         return true;
     });
@@ -106,16 +104,30 @@ function JobListing({ data, darkMode }) {
 
         if (recurringCompanies[activeTab]?.has(lowerCaseName)) {
             return darkMode ? 'bg-green-800' : 'bg-green-200';
-        } else if (year === '2K21' && !recurringCompanies[`${otherYear} ${category}`]?.has(lowerCaseName)) {
-            return darkMode ? 'bg-blue-800' : 'bg-blue-200';
-        } else if (year === '2K20' && !recurringCompanies[`${otherYear} ${category}`]?.has(lowerCaseName)) {
+        } else {
             return darkMode ? 'bg-yellow-800' : 'bg-yellow-200';
         }
-        return darkMode ? 'bg-gray-800' : 'bg-white';
     };
 
     const getButtonStyle = (isActive) => {
         return `mr-1 mb-1 px-2 py-1 text-xs rounded ${isActive ? 'bg-black text-white' : 'bg-gray-200 text-gray-800'}`;
+    };
+
+    const getStats = () => {
+        const recurringCompanySet = recurringCompanies[activeTab] || new Set();
+        const recurringCompanyCount = recurringCompanySet.size;
+        const recurringJobCount = sortedData.filter(job =>
+            recurringCompanySet.has(job['Company Name'].toLowerCase())
+        ).length;
+        const nonRecurringJobCount = sortedData.length - recurringJobCount;
+        const nonRecurringCompanyCount = uniqueCompanies.size - recurringCompanyCount;
+
+        return {
+            recurringCompanies: recurringCompanyCount,
+            recurringJobs: recurringJobCount,
+            nonRecurringCompanies: nonRecurringCompanyCount,
+            nonRecurringJobs: nonRecurringJobCount
+        };
     };
 
     return (
@@ -147,16 +159,10 @@ function JobListing({ data, darkMode }) {
                         Recurring Companies
                     </button>
                     <button
-                        onClick={() => setActiveFilter('new')}
-                        className={getButtonStyle(activeFilter === 'new')}
+                        onClick={() => setActiveFilter('non-recurring')}
+                        className={getButtonStyle(activeFilter === 'non-recurring')}
                     >
-                        New Companies (2K21)
-                    </button>
-                    <button
-                        onClick={() => setActiveFilter('old')}
-                        className={getButtonStyle(activeFilter === 'old')}
-                    >
-                        Old Companies (2K20)
+                        Non-Recurring Companies
                     </button>
                 </div>
             </div>
@@ -170,15 +176,18 @@ function JobListing({ data, darkMode }) {
                     <span className="font-bold text-lg">{totalJobs}</span>
                 </div>
             </div>
-            <div className="mb-4 flex flex-wrap justify-center">
-                <div className={`mr-2 px-2 py-1 text-xs rounded ${darkMode ? 'bg-green-800' : 'bg-green-200'}`}>
-                    Recurring Companies
+            <div className="mb-4 flex justify-center items-start space-x-4">
+                <div className={`px-3 py-2 rounded ${darkMode ? 'bg-green-800' : 'bg-green-200'} flex flex-col items-center`}>
+                    <span className="text-xs">Recurring Companies:</span>
+                    <span className="font-bold">{getStats().recurringCompanies}</span>
+                    <span className="text-xs mt-1">Recurring Jobs:</span>
+                    <span className="font-bold">{getStats().recurringJobs}</span>
                 </div>
-                <div className={`mr-2 px-2 py-1 text-xs rounded ${darkMode ? 'bg-blue-800' : 'bg-blue-200'}`}>
-                    New Companies (2K21)
-                </div>
-                <div className={`mr-2 px-2 py-1 text-xs rounded ${darkMode ? 'bg-yellow-800' : 'bg-yellow-200'}`}>
-                    Old Companies (2K20)
+                <div className={`px-3 py-2 rounded ${darkMode ? 'bg-yellow-800' : 'bg-yellow-200'} flex flex-col items-center`}>
+                    <span className="text-xs">Non-Recurring Companies:</span>
+                    <span className="font-bold">{getStats().nonRecurringCompanies}</span>
+                    <span className="text-xs mt-1">Non-Recurring Jobs:</span>
+                    <span className="font-bold">{getStats().nonRecurringJobs}</span>
                 </div>
             </div>
             <input
