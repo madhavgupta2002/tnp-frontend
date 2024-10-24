@@ -1,17 +1,17 @@
 import React from 'react';
-import { FaChartLine, FaBriefcase, FaClipboardList, FaChartBar, FaGraduationCap, FaFileAlt, FaFileContract, FaUserGraduate, FaListAlt } from 'react-icons/fa';
+import { FaChartLine, FaBriefcase, FaClipboardList, FaChartBar, FaGraduationCap, FaFileAlt, FaUserGraduate, FaListAlt } from 'react-icons/fa';
 
 function Sidebar({ darkMode, dataType, setDataType, sidebarOpen, setSidebarOpen, totalPlaced, isAuthenticated }) {
     const navItems = [
-        { type: 'fte', icon: FaBriefcase, label: 'FTE Data' },
-        { type: 'ppo', icon: FaClipboardList, label: 'PPO Data' },
+        { type: 'combinedOffers', icon: FaFileAlt, label: 'Job Offers' },
+        { type: 'fte', icon: FaBriefcase, label: 'Companywise FTE' },
+        { type: 'ppo', icon: FaClipboardList, label: 'Companywise PPO' },
+        { type: 'jobListing', icon: FaListAlt, label: 'Job Listing' },
+        { type: 'unplacedStudents', icon: FaUserGraduate, label: 'Unplaced Students' },
         { type: 'stats', icon: FaChartBar, label: 'Stats' },
         { type: 'cgpaAnalysis', icon: FaGraduationCap, label: 'CGPA Analysis' },
-        { type: 'fteOffers', icon: FaFileAlt, label: 'FTE Offers' },
-        { type: 'ppoOffers', icon: FaFileContract, label: 'PPO Offers' },
         { type: 'salaryDistribution', icon: FaChartLine, label: 'Salary Distribution' },
-        { type: 'unplacedStudents', icon: FaUserGraduate, label: 'Unplaced Students' },
-        { type: 'jobListing', icon: FaListAlt, label: 'Job Listing' },
+
     ];
 
     return (

@@ -9,10 +9,11 @@ import CGPAAnalysis from './components/CGPAAnalysis';
 import SalaryDistribution from './components/SalaryDistribution';
 import UnplacedStudents from './components/UnplacedStudents';
 import JobListing from './components/JobListing';
+import CombinedOffersTable from './components/CombinedOffersTable';
 
 
-// const BACKEND_BASE_URL = 'http://localhost:3000';
-const BACKEND_BASE_URL = 'https://tnp-backend.vercel.app';
+const BACKEND_BASE_URL = 'http://localhost:3000';
+// const BACKEND_BASE_URL = 'https://tnp-backend.vercel.app';
 
 function App() {
     const [activeData, setActiveData] = useState(null);
@@ -41,6 +42,8 @@ function App() {
     const [salaryStatistics, setSalaryStatistics] = useState({ mean: 0, median: 0, mode: 0 });
     const [cgpaData, setCgpaData] = useState([]);
     const [jobListingData, setJobListingData] = useState(null);
+    const [combinedOffers, setCombinedOffers] = useState([]);
+    const [offerType, setOfferType] = useState('all'); // 'all', 'ppo', or 'fte'
 
     const handlePasswordSubmit = async (e) => {
         e.preventDefault();
@@ -92,6 +95,12 @@ function App() {
     useEffect(() => {
         if (isAuthenticated && dataType === 'jobListing') {
             fetchJobListingData();
+        }
+    }, [dataType, isAuthenticated]);
+
+    useEffect(() => {
+        if (isAuthenticated && dataType === 'combinedOffers') {
+            fetchCombinedOffers();
         }
     }, [dataType, isAuthenticated]);
 
@@ -344,6 +353,28 @@ function App() {
         }
     };
 
+    const fetchCombinedOffers = async () => {
+        setLoading(true);
+        try {
+            const [ppoResponse, fteResponse] = await Promise.all([
+                axios.get(`${BACKEND_BASE_URL}/ppo-offers`, {
+                    headers: { 'Authorization': `Basic ${btoa(password)}` }
+                }),
+                axios.get(`${BACKEND_BASE_URL}/fte-offers`, {
+                    headers: { 'Authorization': `Basic ${btoa(password)}` }
+                })
+            ]);
+
+            const ppoOffers = ppoResponse.data.map(offer => ({ ...offer, offerType: 'PPO' }));
+            const fteOffers = fteResponse.data.map(offer => ({ ...offer, offerType: 'FTE' }));
+            setCombinedOffers([...ppoOffers, ...fteOffers]);
+        } catch (error) {
+            console.error('Error fetching combined offers:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div className={`flex flex-col h-screen ${darkMode ? 'bg-gray-900' : 'bg-white'} font-sans`}>
             <Header
@@ -390,7 +421,8 @@ function App() {
                                                         dataType === 'ppoOffers' ? 'PPO Offers' :
                                                             dataType === 'salaryDistribution' ? 'Salary Distribution' :
                                                                 dataType === 'unplacedStudents' ? 'Unplaced Students' :
-                                                                    dataType === 'jobListing' ? 'Job Listings' : ''}
+                                                                    dataType === 'jobListing' ? 'Job Listings' :
+                                                                        dataType === 'combinedOffers' ? 'Combined Offers' : ''}
                                 </h3>
                                 {dataType === 'cgpaAnalysis' && (
                                     <CGPAAnalysis
@@ -442,7 +474,18 @@ function App() {
                                         darkMode={darkMode}
                                     />
                                 )}
-                                {dataType !== 'cgpaAnalysis' && dataType !== 'fteOffers' && dataType !== 'ppoOffers' && dataType !== 'salaryDistribution' && dataType !== 'unplacedStudents' && dataType !== 'jobListing' && (
+                                {dataType === 'combinedOffers' && (
+                                    <CombinedOffersTable
+                                        offers={combinedOffers}
+                                        offerType={offerType}
+                                        setOfferType={setOfferType}
+                                        darkMode={darkMode}
+                                        sortColumn={sortColumn}
+                                        sortDirection={sortDirection}
+                                        handleSort={handleSort}
+                                    />
+                                )}
+                                {dataType !== 'cgpaAnalysis' && dataType !== 'fteOffers' && dataType !== 'ppoOffers' && dataType !== 'salaryDistribution' && dataType !== 'unplacedStudents' && dataType !== 'jobListing' && dataType !== 'combinedOffers' && (
                                     <DataTable
                                         data={activeData}
                                         dataType={dataType}

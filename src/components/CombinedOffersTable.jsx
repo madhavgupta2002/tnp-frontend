@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { FaSort, FaSortUp, FaSortDown } from 'react-icons/fa';
 
-function OfferTable({ offers, dataType, darkMode }) {
+function CombinedOffersTable({ offers, darkMode }) {
     const [sortColumn, setSortColumn] = useState('');
     const [sortDirection, setSortDirection] = useState('asc');
     const [selectedDurations, setSelectedDurations] = useState(['all']);
+    const [showFTE, setShowFTE] = useState(true);
+    const [showPPO, setShowPPO] = useState(true);
     const [filteredOffers, setFilteredOffers] = useState(offers);
     const [durationColors, setDurationColors] = useState({});
     const [searchTerm, setSearchTerm] = useState('');
+    const [showMultipleOffers, setShowMultipleOffers] = useState(false);
 
-    // Array of color pairs [dark mode color, light mode color]
     const colorPairs = [
         ['bg-blue-800', 'bg-blue-200'],
         ['bg-green-800', 'bg-green-200'],
@@ -48,11 +50,10 @@ function OfferTable({ offers, dataType, darkMode }) {
         });
         setDurationColors(colorMapping);
         applyFilters();
-    }, [offers, selectedDurations, searchTerm]);
+    }, [offers, selectedDurations, showFTE, showPPO, searchTerm, showMultipleOffers]);
 
     const handleSearch = (e) => {
-        const term = e.target.value.toLowerCase();
-        setSearchTerm(term);
+        setSearchTerm(e.target.value.toLowerCase());
     };
 
     const handleDurationFilter = (duration) => {
@@ -75,12 +76,7 @@ function OfferTable({ offers, dataType, darkMode }) {
     const applyFilters = () => {
         let filtered = offers;
 
-        // Apply duration filter
-        if (!selectedDurations.includes('all')) {
-            filtered = filtered.filter(offer => selectedDurations.includes(offer.duration));
-        }
-
-        // Apply search filter
+        // Filter by search term
         if (searchTerm) {
             filtered = filtered.filter(offer =>
                 columns.some(column => {
@@ -89,6 +85,27 @@ function OfferTable({ offers, dataType, darkMode }) {
                 })
             );
         }
+
+        // Filter multiple offers
+        if (showMultipleOffers) {
+            const rollNoCounts = offers.reduce((acc, offer) => {
+                acc[offer.rollNo] = (acc[offer.rollNo] || 0) + 1;
+                return acc;
+            }, {});
+            filtered = filtered.filter(offer => rollNoCounts[offer.rollNo] > 1);
+        }
+
+        // Filter by duration
+        if (!selectedDurations.includes('all')) {
+            filtered = filtered.filter(offer => selectedDurations.includes(offer.duration));
+        }
+
+        // Filter by offer type
+        filtered = filtered.filter(offer => {
+            if (offer.offerType === 'FTE' && showFTE) return true;
+            if (offer.offerType === 'PPO' && showPPO) return true;
+            return false;
+        });
 
         setFilteredOffers(filtered);
     };
@@ -107,13 +124,11 @@ function OfferTable({ offers, dataType, darkMode }) {
             let valueA = a[column];
             let valueB = b[column];
 
-            // Handle special cases for CTC and Stipend
             if (column === 'ctc' || column === 'stipend') {
                 valueA = valueA ? parseFloat(valueA.replace(/[^\d.]/g, '')) : 0;
                 valueB = valueB ? parseFloat(valueB.replace(/[^\d.]/g, '')) : 0;
             }
 
-            // Handle numeric sorting for S.No.
             if (column === 'sNo') {
                 valueA = parseInt(valueA) || 0;
                 valueB = parseInt(valueB) || 0;
@@ -146,11 +161,19 @@ function OfferTable({ offers, dataType, darkMode }) {
         <div>
             <input
                 type="text"
-                placeholder="Search in all columns..."
+                placeholder="Search across all columns..."
                 value={searchTerm}
                 onChange={handleSearch}
                 className={`w-full px-3 py-1 mb-2 rounded border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
             />
+            <div className="mb-2 flex justify-center">
+                <button
+                    onClick={() => setShowMultipleOffers(!showMultipleOffers)}
+                    className={`px-3 py-1 rounded text-xs ${showMultipleOffers ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800'}`}
+                >
+                    {showMultipleOffers ? 'Show All Students' : 'Show Multiple Offers Only'}
+                </button>
+            </div>
             <div className="mb-2 flex flex-wrap justify-center">
                 <button
                     onClick={() => handleDurationFilter('all')}
@@ -167,6 +190,26 @@ function OfferTable({ offers, dataType, darkMode }) {
                         {duration}
                     </button>
                 ))}
+            </div>
+            <div className="mb-2 flex justify-center space-x-4">
+                <label className={`flex items-center ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    <input
+                        type="checkbox"
+                        checked={showFTE}
+                        onChange={(e) => setShowFTE(e.target.checked)}
+                        className="mr-2"
+                    />
+                    FTE
+                </label>
+                <label className={`flex items-center ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    <input
+                        type="checkbox"
+                        checked={showPPO}
+                        onChange={(e) => setShowPPO(e.target.checked)}
+                        className="mr-2"
+                    />
+                    Summer Intern PPO
+                </label>
             </div>
             <div className="overflow-x-auto shadow-md sm:rounded-lg">
                 <table className={`w-full text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} font-segoe`}>
@@ -203,4 +246,4 @@ function OfferTable({ offers, dataType, darkMode }) {
     );
 }
 
-export default OfferTable;
+export default CombinedOffersTable;
