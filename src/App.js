@@ -12,8 +12,8 @@ import JobListing from './components/JobListing';
 import CombinedOffersTable from './components/CombinedOffersTable';
 
 
-const BACKEND_BASE_URL = 'http://localhost:3000';
-// const BACKEND_BASE_URL = 'https://tnp-backend.vercel.app';
+// const BACKEND_BASE_URL = 'http://localhost:3000';
+const BACKEND_BASE_URL = 'https://tnp-backend.vercel.app';
 
 function App() {
     const [activeData, setActiveData] = useState(null);
