@@ -25,9 +25,12 @@ function BulkPlacementCheck({ darkMode }) {
                 setError('Please enter at least one roll number');
                 return;
             }
-
             const response = await axios.post(`${BACKEND_BASE_URL}/check-placement-status`, {
                 rollNumbers: rollNumberList
+            }, {
+                headers: {
+                    'Authorization': 'Basic c2hpdmE='
+                }
             });
 
             setResults(response.data);
