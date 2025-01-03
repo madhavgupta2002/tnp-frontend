@@ -10,6 +10,7 @@ import SalaryDistribution from './components/SalaryDistribution';
 import UnplacedStudents from './components/UnplacedStudents';
 import JobListing from './components/JobListing';
 import CombinedOffersTable from './components/CombinedOffersTable';
+import BulkPlacementCheck from './components/BulkPlacementCheck';
 
 
 // const BACKEND_BASE_URL = 'http://localhost:3000';
@@ -422,7 +423,8 @@ function App() {
                                                             dataType === 'salaryDistribution' ? 'Salary Distribution' :
                                                                 dataType === 'unplacedStudents' ? 'Unplaced Students' :
                                                                     dataType === 'jobListing' ? 'Job Listings' :
-                                                                        dataType === 'combinedOffers' ? 'Combined Offers' : ''}
+                                                                        dataType === 'combinedOffers' ? 'Combined Offers' :
+                                                                            dataType === 'bulkCheck' ? 'Bulk Placement Check' : ''}
                                 </h3>
                                 {dataType === 'cgpaAnalysis' && (
                                     <CGPAAnalysis
@@ -485,7 +487,10 @@ function App() {
                                         handleSort={handleSort}
                                     />
                                 )}
-                                {dataType !== 'cgpaAnalysis' && dataType !== 'fteOffers' && dataType !== 'ppoOffers' && dataType !== 'salaryDistribution' && dataType !== 'unplacedStudents' && dataType !== 'jobListing' && dataType !== 'combinedOffers' && (
+                                {dataType === 'bulkCheck' && (
+                                    <BulkPlacementCheck />
+                                )}
+                                {dataType !== 'cgpaAnalysis' && dataType !== 'fteOffers' && dataType !== 'ppoOffers' && dataType !== 'salaryDistribution' && dataType !== 'unplacedStudents' && dataType !== 'jobListing' && dataType !== 'combinedOffers' && dataType !== 'bulkCheck' && (
                                     <DataTable
                                         data={activeData}
                                         dataType={dataType}
