@@ -58,7 +58,7 @@ function BulkPlacementCheck({ darkMode }) {
                         <textarea
                             value={rollNumbers}
                             onChange={(e) => setRollNumbers(e.target.value)}
-                            className={`w-full h-48 p-2 border rounded-md ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                            className={`w-full h-48 p-2 border rounded-md ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-gray-100 border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
                             placeholder="Enter roll numbers here&#10;2K21/CO/001&#10;2K21/EC/12"
                         />
                     </div>
@@ -101,7 +101,7 @@ function BulkPlacementCheck({ darkMode }) {
                                             <td className="px-6 py-4">
                                                 <div className="flex flex-row gap-4 overflow-x-auto">
                                                     {student.offers.map((offer, idx) => (
-                                                        <div key={idx} className={`flex-shrink-0 p-2 rounded ${darkMode ? 'bg-gray-800' : 'bg-gray-50'}`}>
+                                                        <div key={idx} className={`flex-shrink-0 p-2 rounded ${darkMode ? 'bg-gray-800 text-gray-300' : 'bg-gray-50'}`}>
                                                             <div><span className="font-semibold">Company:</span> {offer.company}</div>
                                                             <div><span className="font-semibold">Type:</span> {offer.type}</div>
                                                             <div><span className="font-semibold">Role:</span> {offer.role}</div>
