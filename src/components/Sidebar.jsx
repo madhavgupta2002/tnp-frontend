@@ -1,7 +1,7 @@
 import React from 'react';
 import { FaChartLine, FaBriefcase, FaClipboardList, FaChartBar, FaGraduationCap, FaFileAlt, FaUserGraduate, FaListAlt } from 'react-icons/fa';
 
-function Sidebar({ darkMode, dataType, setDataType, sidebarOpen, setSidebarOpen, totalPlaced, isAuthenticated }) {
+function Sidebar({ darkMode, dataType, setDataType, sidebarOpen, setSidebarOpen, totalPlaced }) {
     const navItems = [
         { type: 'combinedOffers', icon: FaFileAlt, label: 'Job Offers' },
         { type: 'fte', icon: FaBriefcase, label: 'Companywise FTE' },
@@ -35,14 +35,8 @@ function Sidebar({ darkMode, dataType, setDataType, sidebarOpen, setSidebarOpen,
             </nav>
             <div className={`mt-4 p-4 ${darkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-800'} rounded`}>
                 <p className="text-sm font-semibold">Total Placed</p>
-                {isAuthenticated ? (
-                    <>
-                        <p className="text-lg font-bold">{((totalPlaced / 2615) * 100).toFixed(2)}%</p>
-                        <p className="text-xs">{totalPlaced} / 2615</p>
-                    </>
-                ) : (
-                    <p className="text-lg font-bold">Login to view</p>
-                )}
+                <p className="text-lg font-bold">{((totalPlaced / 2615) * 100).toFixed(2)}%</p>
+                <p className="text-xs">{totalPlaced} / 2615</p>
             </div>
         </div>
     );

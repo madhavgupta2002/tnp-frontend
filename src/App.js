@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
-import AuthForm from './components/AuthForm';
 import DataTable from './components/DataTable';
 import OfferTable from './components/OfferTable';
 import CGPAAnalysis from './components/CGPAAnalysis';
@@ -21,8 +20,6 @@ function App() {
     const [dataType, setDataType] = useState('stats');
     const [searchTerm, setSearchTerm] = useState('');
     const [lastUpdated, setLastUpdated] = useState('');
-    const [password, setPassword] = useState('');
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [darkMode, setDarkMode] = useState(false);
     const [loading, setLoading] = useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -46,73 +43,62 @@ function App() {
     const [combinedOffers, setCombinedOffers] = useState([]);
     const [offerType, setOfferType] = useState('all'); // 'all', 'ppo', or 'fte'
 
-    const handlePasswordSubmit = async (e) => {
-        e.preventDefault();
-        const encodedPassword = btoa(password);
-        try {
-            const response = await axios.get(`${BACKEND_BASE_URL}/last-updated`, {
-                headers: {
-                    'Authorization': `Basic ${encodedPassword}`
-                }
-            });
-            setLastUpdated(new Date(response.data.lastUpdated).toLocaleString());
-            setIsAuthenticated(true);
-        } catch (error) {
-            console.error('Authentication failed:', error);
-            alert('Authentication failed. Please check your password.');
-        }
-    };
+    useEffect(() => {
+        const fetchLastUpdated = async () => {
+            try {
+                const response = await axios.get(`${BACKEND_BASE_URL}/last-updated`);
+                setLastUpdated(new Date(response.data.lastUpdated).toLocaleString());
+            } catch (error) {
+                console.error('Error fetching last updated date:', error);
+            }
+        };
+        fetchLastUpdated();
+    }, []);
 
     useEffect(() => {
-        if (dataType && isAuthenticated) {
+        if (dataType) {
             fetchData(dataType);
             fetchAverageCGPAData(dataType);
             fetchCTCData(dataType);
             fetchTotalPlaced();
         }
-    }, [dataType, isAuthenticated]);
+    }, [dataType]);
 
     useEffect(() => {
-        if (isAuthenticated) {
-            if (dataType === 'fteOffers') {
-                fetchFteOffers();
-            } else if (dataType === 'ppoOffers') {
-                fetchPpoOffers();
-            }
+        if (dataType === 'fteOffers') {
+            fetchFteOffers();
+        } else if (dataType === 'ppoOffers') {
+            fetchPpoOffers();
         }
-    }, [dataType, isAuthenticated]);
+    }, [dataType]);
 
     useEffect(() => {
-        if (isAuthenticated && dataType === 'salaryDistribution') {
+        if (dataType === 'salaryDistribution') {
             fetchSalaryData();
         }
-    }, [dataType, isAuthenticated]);
+    }, [dataType]);
 
     useEffect(() => {
-        if (isAuthenticated && dataType === 'unplacedStudents') {
+        if (dataType === 'unplacedStudents') {
             fetchCGPAData();
         }
-    }, [dataType, isAuthenticated]);
+    }, [dataType]);
     useEffect(() => {
-        if (isAuthenticated && dataType === 'jobListing') {
+        if (dataType === 'jobListing') {
             fetchJobListingData();
         }
-    }, [dataType, isAuthenticated]);
+    }, [dataType]);
 
     useEffect(() => {
-        if (isAuthenticated && dataType === 'combinedOffers') {
+        if (dataType === 'combinedOffers') {
             fetchCombinedOffers();
         }
-    }, [dataType, isAuthenticated]);
+    }, [dataType]);
 
     const fetchJobListingData = async () => {
         setLoading(true);
         try {
-            const response = await axios.get(`${BACKEND_BASE_URL}/job-listings`, {
-                headers: {
-                    'Authorization': `Basic ${btoa(password)}`
-                }
-            });
+            const response = await axios.get(`${BACKEND_BASE_URL}/job-listings`);
             setJobListingData(response.data);
         } catch (error) {
             console.error('Error fetching job listing data:', error);
@@ -123,11 +109,7 @@ function App() {
     const fetchData = async (type) => {
         setLoading(true);
         try {
-            const response = await axios.get(`${BACKEND_BASE_URL}/${type}`, {
-                headers: {
-                    'Authorization': `Basic ${btoa(password)}`
-                }
-            });
+            const response = await axios.get(`${BACKEND_BASE_URL}/${type}`);
             setActiveData(response.data);
         } catch (error) {
             console.error('Error fetching data:', error);
@@ -138,11 +120,7 @@ function App() {
 
     const fetchAverageCGPAData = async (type) => {
         try {
-            const response = await axios.get(`${BACKEND_BASE_URL}/selection-${type}-cgpa`, {
-                headers: {
-                    'Authorization': `Basic ${btoa(password)}`
-                }
-            });
+            const response = await axios.get(`${BACKEND_BASE_URL}/selection-${type}-cgpa`);
             setAverageCGPAData(response.data);
         } catch (error) {
             console.error('Error fetching average CGPA data:', error);
@@ -151,11 +129,7 @@ function App() {
 
     const fetchCTCData = async (type) => {
         try {
-            const response = await axios.get(`${BACKEND_BASE_URL}/selection-${type}-ctc`, {
-                headers: {
-                    'Authorization': `Basic ${btoa(password)}`
-                }
-            });
+            const response = await axios.get(`${BACKEND_BASE_URL}/selection-${type}-ctc`);
             setCtcData(response.data);
         } catch (error) {
             console.error('Error fetching CTC data:', error);
@@ -164,11 +138,7 @@ function App() {
 
     const fetchTotalPlaced = async () => {
         try {
-            const response = await axios.get(`${BACKEND_BASE_URL}/total-placed`, {
-                headers: {
-                    'Authorization': `Basic ${btoa(password)}`
-                }
-            });
+            const response = await axios.get(`${BACKEND_BASE_URL}/total-placed`);
             setTotalPlaced(response.data.totalPlaced);
         } catch (error) {
             console.error('Error fetching total placed data:', error);
@@ -178,16 +148,8 @@ function App() {
     const fetchCGPAAnalysis = async () => {
         setLoading(true);
         try {
-            const lowerResponse = await axios.get(`${BACKEND_BASE_URL}/students-above-cgpa/${inputCGPALower}`, {
-                headers: {
-                    'Authorization': `Basic ${btoa(password)}`
-                }
-            });
-            const upperResponse = await axios.get(`${BACKEND_BASE_URL}/students-above-cgpa/${inputCGPAUpper}`, {
-                headers: {
-                    'Authorization': `Basic ${btoa(password)}`
-                }
-            });
+            const lowerResponse = await axios.get(`${BACKEND_BASE_URL}/students-above-cgpa/${inputCGPALower}`);
+            const upperResponse = await axios.get(`${BACKEND_BASE_URL}/students-above-cgpa/${inputCGPAUpper}`);
 
             // Calculate the difference between upper and lower bounds
             const rangeDiff = calculateRangeDifference(lowerResponse.data, upperResponse.data);
@@ -232,11 +194,7 @@ function App() {
     const fetchFteOffers = async () => {
         setLoading(true);
         try {
-            const response = await axios.get(`${BACKEND_BASE_URL}/fte-offers`, {
-                headers: {
-                    'Authorization': `Basic ${btoa(password)}`
-                }
-            });
+            const response = await axios.get(`${BACKEND_BASE_URL}/fte-offers`);
             setFteOffers(response.data);
         } catch (error) {
             console.error('Error fetching FTE offers:', error);
@@ -248,11 +206,7 @@ function App() {
     const fetchPpoOffers = async () => {
         setLoading(true);
         try {
-            const response = await axios.get(`${BACKEND_BASE_URL}/ppo-offers`, {
-                headers: {
-                    'Authorization': `Basic ${btoa(password)}`
-                }
-            });
+            const response = await axios.get(`${BACKEND_BASE_URL}/ppo-offers`);
             setPpoOffers(response.data);
         } catch (error) {
             console.error('Error fetching PPO offers:', error);
@@ -302,11 +256,7 @@ function App() {
     const fetchSalaryData = async () => {
         setLoading(true);
         try {
-            const response = await axios.get(`${BACKEND_BASE_URL}/ctc/all`, {
-                headers: {
-                    'Authorization': `Basic ${btoa(password)}`
-                }
-            });
+            const response = await axios.get(`${BACKEND_BASE_URL}/ctc/all`);
             setSalaryData(response.data);
             const processedData = processData(response.data);
             setHistogramData(processedData);
@@ -341,11 +291,7 @@ function App() {
     const fetchCGPAData = async () => {
         setLoading(true);
         try {
-            const response = await axios.get(`${BACKEND_BASE_URL}/cgpa`, {
-                headers: {
-                    'Authorization': `Basic ${btoa(password)}`
-                }
-            });
+            const response = await axios.get(`${BACKEND_BASE_URL}/cgpa`);
             setCgpaData(response.data);
         } catch (error) {
             console.error('Error fetching CGPA data:', error);
@@ -358,12 +304,8 @@ function App() {
         setLoading(true);
         try {
             const [ppoResponse, fteResponse] = await Promise.all([
-                axios.get(`${BACKEND_BASE_URL}/ppo-offers`, {
-                    headers: { 'Authorization': `Basic ${btoa(password)}` }
-                }),
-                axios.get(`${BACKEND_BASE_URL}/fte-offers`, {
-                    headers: { 'Authorization': `Basic ${btoa(password)}` }
-                })
+                axios.get(`${BACKEND_BASE_URL}/ppo-offers`),
+                axios.get(`${BACKEND_BASE_URL}/fte-offers`)
             ]);
 
             const ppoOffers = ppoResponse.data.map(offer => ({ ...offer, offerType: 'PPO' }));
@@ -393,20 +335,11 @@ function App() {
                     sidebarOpen={sidebarOpen}
                     setSidebarOpen={setSidebarOpen}
                     totalPlaced={totalPlaced}
-                    isAuthenticated={isAuthenticated}
                 />
 
                 <div className={`flex-1 overflow-y-auto ${darkMode ? 'bg-gray-900' : 'bg-gray-100'}`}>
                     <div className="p-8">
                         <h2 className={`text-2xl font-bold mb-6 ${darkMode ? 'text-white' : 'text-gray-800'}`}>DTU 2025 FTE Placement Statistics (B.Tech)</h2>
-                        {!isAuthenticated ? (
-                            <AuthForm
-                                password={password}
-                                setPassword={setPassword}
-                                handlePasswordSubmit={handlePasswordSubmit}
-                                darkMode={darkMode}
-                            />
-                        ) : null}
                         {loading ? (
                             <div className="flex justify-center items-center h-32">
                                 <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
