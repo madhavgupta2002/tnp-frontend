@@ -1,0 +1,3 @@
+{
+  "buildCommand": "CI=false react-scripts build"
+}
