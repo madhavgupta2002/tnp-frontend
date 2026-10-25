@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { chipClass, inputClass, secondaryButtonClass, tableClass, theadClass, statTileClass, sectionTitleClass } from './theme';
 
 function UnplacedStudents({ cgpaData, darkMode }) {
     const [searchTerm, setSearchTerm] = useState('');
@@ -188,6 +189,7 @@ function UnplacedStudents({ cgpaData, darkMode }) {
 
     const renderPlacementDistribution = () => {
         const totalStudents = filteredData.length;
+        if (totalStudents === 0) return null;
         const placedStudents = filteredData.filter(student => student.placed).length;
         const unplacedStudents = totalStudents - placedStudents;
 
@@ -239,40 +241,49 @@ function UnplacedStudents({ cgpaData, darkMode }) {
 
     return (
         <div className="mb-4">
-            <h3 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+            <h4 className={sectionTitleClass(darkMode)}>
                 Students
-            </h3>
+            </h4>
             <input
-                type="text"
+                type="search"
+                aria-label="Search by name, roll number, or branch"
                 placeholder="Search by name, roll number, or branch"
                 value={searchTerm}
                 onChange={handleSearch}
-                className={`w-full px-3 py-1 mb-2 rounded border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                className={`w-full mb-3 ${inputClass(darkMode)}`}
             />
-            <div className="mb-2 flex flex-wrap justify-center">
+            <div className="mb-3 flex flex-wrap justify-center">
                 <button
                     onClick={() => handlePlacementFilter('all')}
-                    className={`mr-1 mb-1 px-2 py-1 text-xs rounded ${placementFilter === 'all' ? 'bg-black text-white' : 'bg-gray-200 text-gray-800'}`}
+                    type="button"
+                    aria-pressed={placementFilter === 'all'}
+                    className={chipClass(placementFilter === 'all', darkMode)}
                 >
                     All
                 </button>
                 <button
                     onClick={() => handlePlacementFilter('placed')}
-                    className={`mr-1 mb-1 px-2 py-1 text-xs rounded ${placementFilter === 'placed' ? 'bg-black text-white' : 'bg-gray-200 text-gray-800'}`}
+                    type="button"
+                    aria-pressed={placementFilter === 'placed'}
+                    className={chipClass(placementFilter === 'placed', darkMode)}
                 >
                     Placed
                 </button>
                 <button
                     onClick={() => handlePlacementFilter('unplaced')}
-                    className={`mr-1 mb-1 px-2 py-1 text-xs rounded ${placementFilter === 'unplaced' ? 'bg-black text-white' : 'bg-gray-200 text-gray-800'}`}
+                    type="button"
+                    aria-pressed={placementFilter === 'unplaced'}
+                    className={chipClass(placementFilter === 'unplaced', darkMode)}
                 >
                     Unplaced
                 </button>
             </div>
-            <div className="mb-2 flex flex-wrap justify-center">
+            <div className="mb-3 flex flex-wrap justify-center">
                 <button
                     onClick={() => handleBranchFilter('all')}
-                    className={`mr-1 mb-1 px-2 py-1 text-xs rounded ${selectedBranches.includes('all') ? 'bg-black text-white' : 'bg-gray-200 text-gray-800'}`}
+                    type="button"
+                    aria-pressed={selectedBranches.includes('all')}
+                    className={chipClass(selectedBranches.includes('all'), darkMode)}
                 >
                     All Branches
                 </button>
@@ -280,16 +291,20 @@ function UnplacedStudents({ cgpaData, darkMode }) {
                     <button
                         key={branch}
                         onClick={() => handleBranchFilter(branch)}
-                        className={`mr-1 mb-1 px-2 py-1 text-xs rounded ${selectedBranches.includes(branch) ? 'bg-black text-white' : 'bg-gray-200 text-gray-800'}`}
+                        type="button"
+                    aria-pressed={selectedBranches.includes(branch)}
+                    className={chipClass(selectedBranches.includes(branch), darkMode)}
                     >
                         {branch}
                     </button>
                 ))}
             </div>
-            <div className="mb-2 flex flex-wrap justify-center">
+            <div className="mb-3 flex flex-wrap justify-center">
                 <button
                     onClick={() => handleGenderFilter('all')}
-                    className={`mr-1 mb-1 px-2 py-1 text-xs rounded ${selectedGenders.includes('all') ? 'bg-black text-white' : 'bg-gray-200 text-gray-800'}`}
+                    type="button"
+                    aria-pressed={selectedGenders.includes('all')}
+                    className={chipClass(selectedGenders.includes('all'), darkMode)}
                 >
                     All Genders
                 </button>
@@ -297,28 +312,33 @@ function UnplacedStudents({ cgpaData, darkMode }) {
                     <button
                         key={gender}
                         onClick={() => handleGenderFilter(gender)}
-                        className={`mr-1 mb-1 px-2 py-1 text-xs rounded ${selectedGenders.includes(gender) ? 'bg-black text-white' : 'bg-gray-200 text-gray-800'}`}
+                        type="button"
+                    aria-pressed={selectedGenders.includes(gender)}
+                    className={chipClass(selectedGenders.includes(gender), darkMode)}
                     >
                         {gender}
                     </button>
                 ))}
             </div>
             <button
+                type="button"
+                aria-expanded={showAdvancedFilters}
                 onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-                className={`mb-2 px-3 py-1 text-sm rounded ${darkMode ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-800'}`}
+                className={`mb-3 ${secondaryButtonClass(darkMode)}`}
             >
                 {showAdvancedFilters ? 'Hide Advanced Filters' : 'Show Advanced Filters'}
             </button>
             {showAdvancedFilters && (
                 <div className="mb-4">
                     <div className="mb-2">
-                        <label className={`text-sm font-semibold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Top Students:</label>
+                        <label htmlFor="top-count" className={`text-sm font-semibold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Top Students:</label>
                         <input
+                            id="top-count"
                             type="number"
                             value={topCount}
                             onChange={handleTopFilter}
                             placeholder="Enter number"
-                            className={`ml-2 px-2 py-1 rounded border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300'}`}
+                            className={`ml-2 ${inputClass(darkMode)} py-1`}
                         />
                     </div>
                     <div className="mb-2">
@@ -328,7 +348,9 @@ function UnplacedStudents({ cgpaData, darkMode }) {
                                 <button
                                     key={`lower-${range}`}
                                     onClick={() => handleRangeFilter(range, true)}
-                                    className={`mr-1 mb-1 px-2 py-1 text-xs rounded ${lowerRange === range ? 'bg-black text-white' : 'bg-gray-200 text-gray-800'}`}
+                                    type="button"
+                    aria-pressed={lowerRange === range}
+                    className={chipClass(lowerRange === range, darkMode)}
                                 >
                                     {range}
                                 </button>
@@ -338,7 +360,8 @@ function UnplacedStudents({ cgpaData, darkMode }) {
                                 value={customLowerRange}
                                 onChange={(e) => handleCustomRangeFilter(e, true)}
                                 placeholder="Custom"
-                                className={`ml-2 px-2 py-1 w-20 rounded border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300'}`}
+                                aria-label="Custom CGPA bound"
+                                className={`ml-2 w-20 ${inputClass(darkMode)} py-1`}
                                 step="0.01"
                                 min="0"
                                 max="10"
@@ -352,7 +375,9 @@ function UnplacedStudents({ cgpaData, darkMode }) {
                                 <button
                                     key={`upper-${range}`}
                                     onClick={() => handleRangeFilter(range, false)}
-                                    className={`mr-1 mb-1 px-2 py-1 text-xs rounded ${upperRange === range ? 'bg-black text-white' : 'bg-gray-200 text-gray-800'}`}
+                                    type="button"
+                    aria-pressed={upperRange === range}
+                    className={chipClass(upperRange === range, darkMode)}
                                 >
                                     {range}
                                 </button>
@@ -362,7 +387,8 @@ function UnplacedStudents({ cgpaData, darkMode }) {
                                 value={customUpperRange}
                                 onChange={(e) => handleCustomRangeFilter(e, false)}
                                 placeholder="Custom"
-                                className={`ml-2 px-2 py-1 w-20 rounded border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300'}`}
+                                aria-label="Custom CGPA bound"
+                                className={`ml-2 w-20 ${inputClass(darkMode)} py-1`}
                                 step="0.01"
                                 min="0"
                                 max="10"
@@ -375,7 +401,8 @@ function UnplacedStudents({ cgpaData, darkMode }) {
                             <select
                                 value={selectedBranchForRoll}
                                 onChange={handleBranchForRollChange}
-                                className={`mr-2 px-2 py-1 rounded border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300'}`}
+                                aria-label="Branch for roll number range"
+                                className={`mr-2 ${inputClass(darkMode)} py-1`}
                             >
                                 <option value="">Select Branch</option>
                                 {branchOrder.map(branch => (
@@ -387,7 +414,8 @@ function UnplacedStudents({ cgpaData, darkMode }) {
                                 value={rollNumberLowerRange}
                                 onChange={(e) => handleRollNumberRangeChange(e, true)}
                                 placeholder="Lower"
-                                className={`mr-2 px-2 py-1 w-20 rounded border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300'}`}
+                                aria-label="Lower roll number"
+                                className={`mr-2 w-20 ${inputClass(darkMode)} py-1`}
                                 min="1"
                                 max="999"
                             />
@@ -396,13 +424,15 @@ function UnplacedStudents({ cgpaData, darkMode }) {
                                 value={rollNumberUpperRange}
                                 onChange={(e) => handleRollNumberRangeChange(e, false)}
                                 placeholder="Upper"
-                                className={`mr-2 px-2 py-1 w-20 rounded border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300'}`}
+                                aria-label="Upper roll number"
+                                className={`mr-2 w-20 ${inputClass(darkMode)} py-1`}
                                 min="1"
                                 max="999"
                             />
                             <button
+                                type="button"
                                 onClick={applyRollNumberFilter}
-                                className={`px-2 py-1 text-xs rounded ${darkMode ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-800'}`}
+                                className={`px-3 py-1 text-sm rounded ${darkMode ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
                             >
                                 Apply
                             </button>
@@ -410,39 +440,39 @@ function UnplacedStudents({ cgpaData, darkMode }) {
                     </div>
                 </div>
             )}
-            <div className="flex justify-center space-x-4 mb-4">
-                <div className={`px-3 py-2 rounded ${darkMode ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-800'} flex flex-col items-center`}>
+            <div className="flex flex-wrap justify-center gap-4 mb-4">
+                <div className={statTileClass(darkMode)}>
                     <span className="text-xs">Placed</span>
                     <span className="font-bold text-lg">{placedCount}</span>
                 </div>
-                <div className={`px-3 py-2 rounded ${darkMode ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-800'} flex flex-col items-center`}>
+                <div className={statTileClass(darkMode)}>
                     <span className="text-xs">Unplaced</span>
                     <span className="font-bold text-lg">{unplacedCount}</span>
                 </div>
-                <div className={`px-3 py-2 rounded ${darkMode ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-800'} flex flex-col items-center`}>
+                <div className={statTileClass(darkMode)}>
                     <span className="text-xs">All</span>
                     <span className="font-bold text-lg">{filteredData.length}</span>
                 </div>
             </div>
             {renderPlacementDistribution()}
             <div className="overflow-x-auto shadow-md sm:rounded-lg">
-                <table className={`w-full text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} font-segoe`}>
-                    <thead className={`text-xs uppercase ${darkMode ? 'bg-gray-800 text-gray-400' : 'bg-gray-100 text-gray-700'}`}>
+                <table className={tableClass(darkMode)}>
+                    <thead className={theadClass(darkMode)}>
                         <tr>
-                            <th scope="col" className="px-2 py-1 text-left">S.No.</th>
-                            <th scope="col" className="px-2 py-1 cursor-pointer text-left" onClick={() => handleSort('roll')}>
+                            <th scope="col" className="px-3 py-3 text-left">S.No.</th>
+                            <th scope="col" className="px-3 py-3 cursor-pointer text-left" onClick={() => handleSort('roll')}>
                                 Roll No. {sortColumn === 'roll' && (sortDirection === 'asc' ? '▲' : '▼')}
                             </th>
-                            <th scope="col" className="px-2 py-1 cursor-pointer text-left" onClick={() => handleSort('name')}>
+                            <th scope="col" className="px-3 py-3 cursor-pointer text-left" onClick={() => handleSort('name')}>
                                 Name {sortColumn === 'name' && (sortDirection === 'asc' ? '▲' : '▼')}
                             </th>
-                            <th scope="col" className="px-2 py-1 cursor-pointer text-left" onClick={() => handleSort('branch')}>
+                            <th scope="col" className="px-3 py-3 cursor-pointer text-left" onClick={() => handleSort('branch')}>
                                 Branch {sortColumn === 'branch' && (sortDirection === 'asc' ? '▲' : '▼')}
                             </th>
-                            <th scope="col" className="px-2 py-1 cursor-pointer text-left" onClick={() => handleSort('gender')}>
+                            <th scope="col" className="px-3 py-3 cursor-pointer text-left" onClick={() => handleSort('gender')}>
                                 Gender {sortColumn === 'gender' && (sortDirection === 'asc' ? '▲' : '▼')}
                             </th>
-                            <th scope="col" className="px-2 py-1 cursor-pointer text-left" onClick={() => handleSort('cgpa')}>
+                            <th scope="col" className="px-3 py-3 cursor-pointer text-left" onClick={() => handleSort('cgpa')}>
                                 CGPA {sortColumn === 'cgpa' && (sortDirection === 'asc' ? '▲' : '▼')}
                             </th>
                         </tr>
@@ -451,12 +481,12 @@ function UnplacedStudents({ cgpaData, darkMode }) {
                         {filteredData.map((student, index) => (
                             <tr key={student.roll}
                                 className={`${student.placed ? (darkMode ? 'bg-green-900' : 'bg-green-100') : (darkMode ? 'bg-gray-800' : 'bg-white')}`}>
-                                <td className="px-2 py-1">{index + 1}</td>
-                                <td className="px-2 py-1">{student.roll}</td>
-                                <td className="px-2 py-1">{student.name}</td>
-                                <td className="px-2 py-1">{student.branch}</td>
-                                <td className="px-2 py-1">{student.gender}</td>
-                                <td className="px-2 py-1">{student.cgpa.toFixed(2)}</td>
+                                <td className="px-3 py-2">{index + 1}</td>
+                                <td className="px-3 py-2">{student.roll}</td>
+                                <td className="px-3 py-2">{student.name}</td>
+                                <td className="px-3 py-2">{student.branch}</td>
+                                <td className="px-3 py-2">{student.gender}</td>
+                                <td className="px-3 py-2">{student.cgpa.toFixed(2)}</td>
                             </tr>
                         ))}
                     </tbody>

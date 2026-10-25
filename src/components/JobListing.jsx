@@ -1,16 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { FaSort, FaSortUp, FaSortDown } from 'react-icons/fa';
+import { chipClass, inputClass, tableClass, theadClass, filledRowText, statTileClass } from './theme';
 
 function JobListing({ data, darkMode }) {
     const [activeTab, setActiveTab] = useState('2K21 FTE');
     const [sortColumn, setSortColumn] = useState('Posted on');
     const [sortDirection, setSortDirection] = useState('desc');
     const [searchTerm, setSearchTerm] = useState('');
-    const [filteredData, setFilteredData] = useState([]);
     const [recurringCompanies, setRecurringCompanies] = useState({});
     const [activeFilter, setActiveFilter] = useState('all');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
+
+    const parsePostedOn = (postedOn) => new Date(String(postedOn || '').split(' ')[0].split('-').reverse().join('-'));
 
     useEffect(() => {
         if (data) {
@@ -26,16 +28,26 @@ function JobListing({ data, darkMode }) {
         }
     }, [data]);
 
-    useEffect(() => {
-        if (data && data[activeTab]) {
-            const sortedData = [...data[activeTab]].sort((a, b) => {
-                const dateA = new Date(a['Posted on'].split(' ')[0].split('-').reverse().join('-'));
-                const dateB = new Date(b['Posted on'].split(' ')[0].split('-').reverse().join('-'));
-                return dateB - dateA;
-            });
-            setFilteredData(sortedData.map((job, index) => ({ ...job, serialNumber: sortedData.length - index })));
-        }
+    // Serial numbers are assigned once per tab (oldest posting = 1) so they stay stable while
+    // searching / date-filtering; search and date filters are combined instead of overwriting each other.
+    const numberedJobs = useMemo(() => {
+        if (!data || !data[activeTab]) return [];
+        const byDateDesc = [...data[activeTab]].sort((a, b) => parsePostedOn(b['Posted on']) - parsePostedOn(a['Posted on']));
+        return byDateDesc.map((job, index) => ({ ...job, serialNumber: byDateDesc.length - index }));
     }, [data, activeTab]);
+
+    const filteredData = useMemo(() => {
+        const start = startDate ? new Date(startDate) : new Date(0);
+        const end = endDate ? new Date(endDate) : new Date();
+        return numberedJobs.filter(job => {
+            const jobDate = parsePostedOn(job['Posted on']);
+            if (jobDate < start || jobDate > end) return false;
+            if (!searchTerm) return true;
+            return Object.entries(job).some(([key, value]) =>
+                key !== 'serialNumber' && value != null && value.toString().toLowerCase().includes(searchTerm)
+            );
+        });
+    }, [numberedJobs, startDate, endDate, searchTerm]);
 
     const handleSort = (column) => {
         if (sortColumn === column) {
@@ -47,36 +59,16 @@ function JobListing({ data, darkMode }) {
     };
 
     const handleSearch = (e) => {
-        const term = e.target.value.toLowerCase();
-        setSearchTerm(term);
-        const filtered = data[activeTab].filter(job =>
-            Object.values(job).some(value =>
-                value.toString().toLowerCase().includes(term)
-            )
-        );
-        setFilteredData(filtered.map((job, index) => ({ ...job, serialNumber: index + 1 })));
+        setSearchTerm(e.target.value.toLowerCase());
     };
-
-    const handleDateFilter = () => {
-        if (data && data[activeTab]) {
-            const filtered = data[activeTab].filter(job => {
-                const jobDate = new Date(job['Posted on'].split(' ')[0].split('-').reverse().join('-'));
-                const start = startDate ? new Date(startDate) : new Date(0);
-                const end = endDate ? new Date(endDate) : new Date();
-                return jobDate >= start && jobDate <= end;
-            });
-            setFilteredData(filtered.map((job, index) => ({ ...job, serialNumber: index + 1 })));
-        }
-    };
-
-    useEffect(() => {
-        handleDateFilter();
-    }, [startDate, endDate, data, activeTab]);
 
     const sortedData = [...filteredData].sort((a, b) => {
+        if (sortColumn === 'S.No') {
+            return sortDirection === 'asc' ? a.serialNumber - b.serialNumber : b.serialNumber - a.serialNumber;
+        }
         if (sortColumn === 'Posted on') {
-            const dateA = new Date(a[sortColumn].split(' ')[0].split('-').reverse().join('-'));
-            const dateB = new Date(b[sortColumn].split(' ')[0].split('-').reverse().join('-'));
+            const dateA = parsePostedOn(a[sortColumn]);
+            const dateB = parsePostedOn(b[sortColumn]);
             return sortDirection === 'asc' ? dateA - dateB : dateB - dateA;
         }
         if (a[sortColumn] < b[sortColumn]) return sortDirection === 'asc' ? -1 : 1;
@@ -85,8 +77,6 @@ function JobListing({ data, darkMode }) {
     }).filter(job => {
         if (activeFilter === 'all') return true;
         const lowerCaseName = job['Company Name'].toLowerCase();
-        const [year, category] = activeTab.split(' ');
-        const otherYear = year === '2K21' ? '2K20' : '2K21';
         if (activeFilter === 'recurring') {
             return recurringCompanies[activeTab]?.has(lowerCaseName);
         } else if (activeFilter === 'non-recurring') {
@@ -96,12 +86,12 @@ function JobListing({ data, darkMode }) {
     });
 
     const formatDate = (dateString) => {
-        const [date] = dateString.split(' ');
+        const [date] = String(dateString || '').split(' ');
         return date;
     };
 
     const formatStipend = (stipend) => {
-        return stipend.replace('per Month', 'PM');
+        return String(stipend || '').replace('per Month', 'PM');
     };
 
     const tabOrder = ['2K21 FTE', '2K20 FTE', '2K21 Intern', '2K20 Intern'];
@@ -112,13 +102,12 @@ function JobListing({ data, darkMode }) {
     const columnOrder = ['S.No', 'Job Post Name', 'Company Name', 'CTC', 'Stipend', 'Posted on', 'CutOff'];
 
     const truncateText = (text, maxLength) => {
+        text = text == null ? '' : String(text);
         return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
     };
 
     const getCompanyColor = (companyName) => {
         const lowerCaseName = companyName.toLowerCase();
-        const [year, category] = activeTab.split(' ');
-        const otherYear = year === '2K21' ? '2K20' : '2K21';
 
         if (recurringCompanies[activeTab]?.has(lowerCaseName)) {
             return darkMode ? 'bg-green-800' : 'bg-green-200';
@@ -128,7 +117,7 @@ function JobListing({ data, darkMode }) {
     };
 
     const getButtonStyle = (isActive) => {
-        return `mr-1 mb-1 px-2 py-1 text-xs rounded ${isActive ? 'bg-black text-white' : 'bg-gray-200 text-gray-800'}`;
+        return chipClass(isActive, darkMode);
     };
 
     const getStats = () => {
@@ -155,13 +144,14 @@ function JobListing({ data, darkMode }) {
     };
 
     return (
-        <div className={`mt-8 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
-            <h2 className="text-2xl font-bold mb-4">Job Listing</h2>
+        <div className={darkMode ? 'text-white' : 'text-gray-800'}>
             <div className="flex flex-wrap justify-between items-start mb-4">
                 <div className="flex flex-wrap mb-2">
                     {tabOrder.map((tab) => (
                         <button
                             key={tab}
+                            type="button"
+                            aria-pressed={activeTab === tab}
                             onClick={() => setActiveTab(tab)}
                             className={getButtonStyle(activeTab === tab)}
                         >
@@ -171,18 +161,24 @@ function JobListing({ data, darkMode }) {
                 </div>
                 <div className="flex flex-wrap mb-2">
                     <button
+                        type="button"
+                        aria-pressed={activeFilter === 'all'}
                         onClick={() => setActiveFilter('all')}
                         className={getButtonStyle(activeFilter === 'all')}
                     >
                         All Companies
                     </button>
                     <button
+                        type="button"
+                        aria-pressed={activeFilter === 'recurring'}
                         onClick={() => setActiveFilter('recurring')}
                         className={getButtonStyle(activeFilter === 'recurring')}
                     >
                         Recurring Companies
                     </button>
                     <button
+                        type="button"
+                        aria-pressed={activeFilter === 'non-recurring'}
                         onClick={() => setActiveFilter('non-recurring')}
                         className={getButtonStyle(activeFilter === 'non-recurring')}
                     >
@@ -190,31 +186,31 @@ function JobListing({ data, darkMode }) {
                     </button>
                 </div>
             </div>
-            <div className="flex justify-center space-x-4 mb-4">
-                <div className={`px-3 py-2 rounded ${darkMode ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-800'} flex flex-col items-center`}>
+            <div className="flex flex-wrap justify-center gap-4 mb-4">
+                <div className={statTileClass(darkMode)}>
                     <span className="text-xs">Total Companies</span>
                     <span className="font-bold text-lg">{uniqueCompanies.size}</span>
                 </div>
-                <div className={`px-3 py-2 rounded ${darkMode ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-800'} flex flex-col items-center`}>
+                <div className={statTileClass(darkMode)}>
                     <span className="text-xs">Total Jobs</span>
                     <span className="font-bold text-lg">{totalJobs}</span>
                 </div>
             </div>
-            <div className="mb-4 flex justify-center items-start space-x-4">
-                <div className={`px-3 py-2 rounded ${darkMode ? 'bg-green-800' : 'bg-green-200'} flex flex-col items-center`}>
+            <div className="mb-4 flex flex-wrap justify-center items-start gap-4">
+                <div className={`px-3 py-2 rounded ${darkMode ? 'bg-green-800 text-gray-100' : 'bg-green-200 text-gray-900'} flex flex-col items-center`}>
                     <span className="text-xs">Recurring Companies:</span>
                     <span className="font-bold">{getStats().recurringCompanies}</span>
                     <span className="text-xs mt-1">Recurring Jobs:</span>
                     <span className="font-bold">{getStats().recurringJobs}</span>
                 </div>
-                <div className={`px-3 py-2 rounded ${darkMode ? 'bg-yellow-800' : 'bg-yellow-200'} flex flex-col items-center`}>
+                <div className={`px-3 py-2 rounded ${darkMode ? 'bg-yellow-800 text-gray-100' : 'bg-yellow-200 text-gray-900'} flex flex-col items-center`}>
                     <span className="text-xs">Non-Recurring Companies:</span>
                     <span className="font-bold">{getStats().nonRecurringCompanies}</span>
                     <span className="text-xs mt-1">Non-Recurring Jobs:</span>
                     <span className="font-bold">{getStats().nonRecurringJobs}</span>
                 </div>
             </div>
-            <div className="flex justify-center items-center space-x-4 mb-4">
+            <div className="flex flex-wrap justify-center items-center gap-4 mb-4">
                 <div className="flex items-center space-x-2">
                     <label htmlFor="startDate" className="text-sm">Start Date:</label>
                     <input
@@ -222,7 +218,7 @@ function JobListing({ data, darkMode }) {
                         id="startDate"
                         value={startDate}
                         onChange={(e) => setStartDate(e.target.value)}
-                        className={`px-2 py-1 rounded border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300'}`}
+                        className={`${inputClass(darkMode)} py-1`}
                     />
                 </div>
                 <div className="flex items-center space-x-2">
@@ -232,9 +228,10 @@ function JobListing({ data, darkMode }) {
                         id="endDate"
                         value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
-                        className={`px-2 py-1 rounded border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300'}`}
+                        className={`${inputClass(darkMode)} py-1`}
                     />
                     <button
+                        type="button"
                         onClick={setTodayAsEndDate}
                         className={`px-2 py-1 text-xs rounded ${darkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'} text-white`}
                     >
@@ -243,29 +240,31 @@ function JobListing({ data, darkMode }) {
                 </div>
             </div>
             <input
-                type="text"
+                type="search"
+                aria-label="Search jobs"
                 placeholder="Search jobs..."
                 value={searchTerm}
                 onChange={handleSearch}
-                className={`w-full px-3 py-1 mb-2 rounded border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                className={`w-full mb-3 ${inputClass(darkMode)}`}
             />
             <div className="overflow-x-auto shadow-md sm:rounded-lg">
-                <table className={`w-full text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} font-segoe`}>
-                    <thead className={`text-xs uppercase ${darkMode ? 'bg-gray-800 text-gray-400' : 'bg-gray-100 text-gray-700'}`}>
+                <table className={tableClass(darkMode)}>
+                    <thead className={theadClass(darkMode)}>
                         <tr>
                             {columnOrder.map((column) => (
                                 <th
                                     key={column}
                                     scope="col"
-                                    className={`px-2 py-1 cursor-pointer text-left`}
+                                    className="px-3 py-3 cursor-pointer select-none text-left whitespace-nowrap"
+                                    aria-sort={sortColumn === column ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
                                     onClick={() => handleSort(column)}
                                 >
                                     <div className="flex items-center">
                                         {column}
                                         {sortColumn === column ? (
-                                            sortDirection === 'asc' ? <FaSortUp className="ml-1" /> : <FaSortDown className="ml-1" />
+                                            sortDirection === 'asc' ? <FaSortUp className="ml-1" aria-hidden="true" /> : <FaSortDown className="ml-1" aria-hidden="true" />
                                         ) : (
-                                            <FaSort className="ml-1" />
+                                            <FaSort className="ml-1" aria-hidden="true" />
                                         )}
                                     </div>
                                 </th>
@@ -274,14 +273,14 @@ function JobListing({ data, darkMode }) {
                     </thead>
                     <tbody>
                         {sortedData.map((job) => (
-                            <tr key={job.serialNumber} className={`${getCompanyColor(job['Company Name'])}`}>
-                                <td className="px-2 py-1 whitespace-nowrap">{job.serialNumber}</td>
-                                <td className="px-2 py-1 whitespace-normal break-words">{job['Job Post Name']}</td>
-                                <td className="px-2 py-1 whitespace-normal break-words">{job['Company Name']}</td>
-                                <td className="px-2 py-1 whitespace-nowrap overflow-hidden text-ellipsis" title={job['CTC']}>{truncateText(job['CTC'], 15)}</td>
-                                <td className="px-2 py-1 whitespace-nowrap overflow-hidden text-ellipsis" title={formatStipend(job['Stipend'])}>{truncateText(formatStipend(job['Stipend']), 15)}</td>
-                                <td className="px-2 py-1 whitespace-nowrap overflow-hidden text-ellipsis" title={formatDate(job['Posted on'])}>{formatDate(job['Posted on'])}</td>
-                                <td className="px-2 py-1 whitespace-nowrap overflow-hidden text-ellipsis" title={job['CutOff']}>{truncateText(job['CutOff'], 15)}</td>
+                            <tr key={job.serialNumber} className={`${getCompanyColor(job['Company Name'])} ${filledRowText(darkMode)}`}>
+                                <td className="px-3 py-2 whitespace-nowrap">{job.serialNumber}</td>
+                                <td className="px-3 py-2 whitespace-normal break-words">{job['Job Post Name']}</td>
+                                <td className="px-3 py-2 whitespace-normal break-words">{job['Company Name']}</td>
+                                <td className="px-3 py-2 whitespace-nowrap overflow-hidden text-ellipsis" title={job['CTC']}>{truncateText(job['CTC'], 15)}</td>
+                                <td className="px-3 py-2 whitespace-nowrap overflow-hidden text-ellipsis" title={formatStipend(job['Stipend'])}>{truncateText(formatStipend(job['Stipend']), 15)}</td>
+                                <td className="px-3 py-2 whitespace-nowrap overflow-hidden text-ellipsis" title={formatDate(job['Posted on'])}>{formatDate(job['Posted on'])}</td>
+                                <td className="px-3 py-2 whitespace-nowrap overflow-hidden text-ellipsis" title={job['CutOff']}>{truncateText(job['CutOff'], 15)}</td>
                             </tr>
                         ))}
                     </tbody>

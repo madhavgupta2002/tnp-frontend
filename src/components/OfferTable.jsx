@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaSort, FaSortUp, FaSortDown } from 'react-icons/fa';
+import { chipClass, inputClass, tableClass, theadClass, filledRowText } from './theme';
 
 function OfferTable({ offers, dataType, darkMode }) {
     const [sortColumn, setSortColumn] = useState('');
@@ -128,7 +129,7 @@ function OfferTable({ offers, dataType, darkMode }) {
     const sortedOffers = sortColumn ? sortOffers(filteredOffers, sortColumn) : filteredOffers;
 
     const getCellClass = (key) => {
-        const baseClass = "px-2 py-1";
+        const baseClass = "px-3 py-2";
         if (key === 'others') {
             return `${baseClass} max-w-[200px] truncate hover:whitespace-normal hover:overflow-visible hover:text-clip`;
         }
@@ -145,16 +146,19 @@ function OfferTable({ offers, dataType, darkMode }) {
     return (
         <div>
             <input
-                type="text"
+                type="search"
+                aria-label="Search offers"
                 placeholder="Search in all columns..."
                 value={searchTerm}
                 onChange={handleSearch}
-                className={`w-full px-3 py-1 mb-2 rounded border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                className={`w-full mb-3 ${inputClass(darkMode)}`}
             />
-            <div className="mb-2 flex flex-wrap justify-center">
+            <div className="mb-3 flex flex-wrap justify-center">
                 <button
                     onClick={() => handleDurationFilter('all')}
-                    className={`mr-1 mb-1 px-2 py-1 text-xs rounded ${selectedDurations.includes('all') ? 'bg-black text-white' : 'bg-gray-200 text-gray-800'}`}
+                    type="button"
+                    aria-pressed={selectedDurations.includes('all')}
+                    className={chipClass(selectedDurations.includes('all'), darkMode)}
                 >
                     All Durations
                 </button>
@@ -162,24 +166,32 @@ function OfferTable({ offers, dataType, darkMode }) {
                     <button
                         key={duration}
                         onClick={() => handleDurationFilter(duration)}
-                        className={`mr-1 mb-1 px-2 py-1 text-xs rounded ${selectedDurations.includes(duration) ? 'bg-black text-white' : 'bg-gray-200 text-gray-800'}`}
+                        type="button"
+                        aria-pressed={selectedDurations.includes(duration)}
+                        className={chipClass(selectedDurations.includes(duration), darkMode)}
                     >
                         {duration}
                     </button>
                 ))}
             </div>
             <div className="overflow-x-auto shadow-md sm:rounded-lg">
-                <table className={`w-full text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} font-segoe`}>
-                    <thead className={`text-xs uppercase ${darkMode ? 'bg-gray-800 text-gray-400' : 'bg-gray-100 text-gray-700'}`}>
+                <table className={tableClass(darkMode)}>
+                    <thead className={theadClass(darkMode)}>
                         <tr>
                             {columns.map(({ key, label }) => (
-                                <th key={key} scope="col" className={getCellClass(key)} onClick={() => handleSort(key)}>
+                                <th
+                                    key={key}
+                                    scope="col"
+                                    className={`${getCellClass(key)} cursor-pointer select-none`}
+                                    onClick={() => handleSort(key)}
+                                    aria-sort={sortColumn === key ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+                                >
                                     <div className="flex items-center justify-center">
                                         {label}
                                         {sortColumn === key ? (
-                                            sortDirection === 'asc' ? <FaSortUp className="ml-1" /> : <FaSortDown className="ml-1" />
+                                            sortDirection === 'asc' ? <FaSortUp className="ml-1" aria-hidden="true" /> : <FaSortDown className="ml-1" aria-hidden="true" />
                                         ) : (
-                                            <FaSort className="ml-1" />
+                                            <FaSort className="ml-1" aria-hidden="true" />
                                         )}
                                     </div>
                                 </th>
@@ -188,7 +200,7 @@ function OfferTable({ offers, dataType, darkMode }) {
                     </thead>
                     <tbody>
                         {sortedOffers.map((offer, index) => (
-                            <tr key={index} className={getRowColor(offer.duration)}>
+                            <tr key={index} className={`${getRowColor(offer.duration)} ${filledRowText(darkMode)}`}>
                                 {columns.map(({ key }) => (
                                     <td key={key} className={getCellClass(key)} title={key === 'others' ? offer[key] : ''}>
                                         {offer[key]}

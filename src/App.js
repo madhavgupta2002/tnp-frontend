@@ -47,7 +47,10 @@ function App() {
         const fetchLastUpdated = async () => {
             try {
                 const response = await axios.get(`${BACKEND_BASE_URL}/last-updated`);
-                setLastUpdated(new Date(response.data.lastUpdated).toLocaleString());
+                const date = new Date(response.data && response.data.lastUpdated);
+                if (!Number.isNaN(date.getTime())) {
+                    setLastUpdated(date.toLocaleString());
+                }
             } catch (error) {
                 console.error('Error fetching last updated date:', error);
             }
@@ -56,12 +59,20 @@ function App() {
     }, []);
 
     useEffect(() => {
-        if (dataType) {
+        fetchTotalPlaced();
+    }, []);
+
+    useEffect(() => {
+        // Only these sections have a generic `/${dataType}` endpoint; the others fetch their own data below.
+        if (dataType === 'stats' || dataType === 'fte' || dataType === 'ppo') {
             fetchData(dataType);
+        }
+        // Per-company CGPA / CTC lookups exist only for the company-wise FTE / PPO tables.
+        if (dataType === 'fte' || dataType === 'ppo') {
             fetchAverageCGPAData(dataType);
             fetchCTCData(dataType);
-            fetchTotalPlaced();
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [dataType]);
 
     useEffect(() => {
@@ -319,12 +330,13 @@ function App() {
     };
 
     return (
-        <div className={`flex flex-col h-screen ${darkMode ? 'bg-gray-900' : 'bg-white'} font-sans`}>
+        <div className={`flex flex-col h-screen ${darkMode ? 'bg-gray-900 text-gray-100' : 'bg-white text-gray-900'} font-sans`}>
             <Header
                 darkMode={darkMode}
                 toggleDarkMode={toggleDarkMode}
                 handleLogout={handleLogout}
                 toggleSidebar={toggleSidebar}
+                sidebarOpen={sidebarOpen}
             />
 
             <div className="flex flex-1 overflow-hidden">
@@ -337,15 +349,15 @@ function App() {
                     totalPlaced={totalPlaced}
                 />
 
-                <div className={`flex-1 overflow-y-auto ${darkMode ? 'bg-gray-900' : 'bg-gray-100'}`}>
-                    <div className="p-8">
-                        <h2 className={`text-2xl font-bold mb-6 ${darkMode ? 'text-white' : 'text-gray-800'}`}>DTU 2025 FTE Placement Statistics (B.Tech)</h2>
+                <main id="main-content" className={`flex-1 min-w-0 overflow-y-auto ${darkMode ? 'bg-gray-900' : 'bg-gray-100'}`}>
+                    <div className="p-4 sm:p-6 md:p-8">
+                        <h2 className={`text-xl sm:text-2xl font-bold mb-6 ${darkMode ? 'text-white' : 'text-gray-800'}`}>DTU 2025 FTE Placement Statistics (B.Tech)</h2>
                         {loading ? (
-                            <div className="flex justify-center items-center h-32">
+                            <div className="flex justify-center items-center h-32" role="status" aria-label="Loading">
                                 <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
                             </div>
                         ) : (
-                            <div className="mt-8">
+                            <div>
                                 <h3 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
                                     {dataType === 'fte' ? 'FTE (Full Time + 6 Month Intern) Data' :
                                         dataType === 'ppo' ? 'PPO (Pre Placement Offers) Data' :
@@ -421,7 +433,7 @@ function App() {
                                     />
                                 )}
                                 {dataType === 'bulkCheck' && (
-                                    <BulkPlacementCheck />
+                                    <BulkPlacementCheck darkMode={darkMode} />
                                 )}
                                 {dataType !== 'cgpaAnalysis' && dataType !== 'fteOffers' && dataType !== 'ppoOffers' && dataType !== 'salaryDistribution' && dataType !== 'unplacedStudents' && dataType !== 'jobListing' && dataType !== 'combinedOffers' && dataType !== 'bulkCheck' && (
                                     <DataTable
@@ -443,11 +455,11 @@ function App() {
                                 )}
                             </div>
                         )}
-                        <footer className={`mt-8 text-center ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                            Last updated on: {lastUpdated}
+                        <footer className={`mt-8 text-center text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                            Last updated on: {lastUpdated || '—'}
                         </footer>
                     </div>
-                </div>
+                </main>
             </div>
         </div>
     );

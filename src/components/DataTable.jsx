@@ -1,12 +1,13 @@
 import React from 'react';
-import { FaSearch, FaSort, FaSortUp, FaSortDown } from 'react-icons/fa';
+import { FaSearch } from 'react-icons/fa';
+import { inputClass, secondaryButtonClass, tableClass, theadClass, stripedRowClass } from './theme';
 
-function DataTable({ data, dataType, darkMode, searchTerm, setSearchTerm, showAverageCGPA, setShowAverageCGPA, showCTC, setShowCTC, averageCGPAData, ctcData, sortColumn, sortDirection, handleSort }) {
+function DataTable({ data, dataType, darkMode, searchTerm, setSearchTerm, showAverageCGPA, setShowAverageCGPA, showCTC, setShowCTC, averageCGPAData, ctcData }) {
     if (!data) return null;
 
     if (dataType === 'stats') {
         if (!data || typeof data !== 'object' || Object.keys(data).length === 0) {
-            return <div className={`text-gray-600 ${darkMode ? 'dark:text-gray-400' : ''}`}>No data available for stats</div>;
+            return <div className={darkMode ? 'text-gray-400' : 'text-gray-600'}>No data available for stats</div>;
         }
 
         const rowNames = Object.keys(data);
@@ -14,8 +15,8 @@ function DataTable({ data, dataType, darkMode, searchTerm, setSearchTerm, showAv
 
         return (
             <div className="overflow-x-auto shadow-md sm:rounded-lg">
-                <table className={`w-full text-sm text-center ${darkMode ? 'text-gray-400' : 'text-gray-500'} font-segoe`}>
-                    <thead className={`text-xs uppercase ${darkMode ? 'bg-gray-800 text-gray-400' : 'bg-gray-100 text-gray-700'}`}>
+                <table className={`${tableClass(darkMode)} text-center`}>
+                    <thead className={theadClass(darkMode)}>
                         <tr>
                             <th scope="col" className="px-2 py-3">Branch</th>
                             {columnNames.map((key) => (
@@ -25,10 +26,10 @@ function DataTable({ data, dataType, darkMode, searchTerm, setSearchTerm, showAv
                     </thead>
                     <tbody>
                         {rowNames.map((rowName, index) => (
-                            <tr key={rowName} className={index % 2 === 0 ? (darkMode ? 'bg-gray-800' : 'bg-white') : (darkMode ? 'bg-gray-700' : 'bg-gray-50')}>
+                            <tr key={rowName} className={stripedRowClass(index, darkMode)}>
                                 <th scope="row" className={`px-2 py-4 font-medium whitespace-nowrap ${darkMode ? 'text-white' : 'text-gray-900'}`}>{rowName}</th>
                                 {Object.values(data[rowName]).map((value, index) => (
-                                    <td key={index} className="px-2 py-4 text-center">
+                                    <td key={index} className="px-2 py-4 text-center whitespace-nowrap">
                                         {rowName === 'Percentage' ? `${value.toFixed(2)}%` :
                                             rowName === 'Mean CTC' || rowName === 'Median CTC' || rowName === 'Mode CTC' ? `${value} LPA` :
                                                 value}
@@ -50,31 +51,34 @@ function DataTable({ data, dataType, darkMode, searchTerm, setSearchTerm, showAv
 
         return (
             <div>
-                <div className="mb-4 flex items-center">
-                    <FaSearch className="mr-2 text-gray-500" />
+                <div className="mb-4 flex flex-wrap items-center gap-2 sm:gap-4">
+                    <FaSearch className={darkMode ? 'text-gray-400' : 'text-gray-500'} aria-hidden="true" />
                     <input
-                        type="text"
+                        type="search"
+                        aria-label="Search company"
                         placeholder="Search Company"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className={`px-4 py-2 rounded border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                        className={`${inputClass(darkMode)} flex-1 min-w-0 sm:flex-none`}
                     />
                     <button
                         onClick={() => setShowAverageCGPA(!showAverageCGPA)}
-                        className={`ml-4 px-4 py-2 rounded ${darkMode ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-800'}`}
+                        type="button"
+                        className={secondaryButtonClass(darkMode)}
                     >
                         {showAverageCGPA ? 'Hide Average CGPA' : 'Show Average CGPA'}
                     </button>
                     <button
                         onClick={() => setShowCTC(!showCTC)}
-                        className={`ml-4 px-4 py-2 rounded ${darkMode ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-800'}`}
+                        type="button"
+                        className={secondaryButtonClass(darkMode)}
                     >
                         {showCTC ? 'Hide CTC' : 'Show CTC'}
                     </button>
                 </div>
                 <div className="overflow-x-auto shadow-md sm:rounded-lg">
-                    <table className={`w-full text-sm text-center ${darkMode ? 'text-gray-400' : 'text-gray-500'} font-segoe`}>
-                        <thead className={`text-xs uppercase ${darkMode ? 'bg-gray-800 text-gray-400' : 'bg-gray-100 text-gray-700'}`}>
+                    <table className={`${tableClass(darkMode)} text-center`}>
+                        <thead className={theadClass(darkMode)}>
                             <tr>
                                 <th scope="col" className="px-2 py-3">Order</th>
                                 <th scope="col" className="px-2 py-3">Company Name</th>
@@ -89,7 +93,7 @@ function DataTable({ data, dataType, darkMode, searchTerm, setSearchTerm, showAv
                             {reversedData
                                 .filter(row => row['Company Name'] && typeof row['Company Name'] === 'string' && /[a-zA-Z]/.test(row['Company Name']))
                                 .map((row, index) => (
-                                    <tr key={row['Column1']} className={index % 2 === 0 ? (darkMode ? 'bg-gray-800' : 'bg-white') : (darkMode ? 'bg-gray-700' : 'bg-gray-50')}>
+                                    <tr key={row['Column1'] ?? `${row['Order']}-${row['Company Name']}-${index}`} className={stripedRowClass(index, darkMode)}>
                                         <td className="px-2 py-4 text-center">{row['Order']}</td>
                                         <th scope="row" className={`px-2 py-4 font-medium whitespace-nowrap ${darkMode ? 'text-white' : 'text-gray-900'}`}>{row['Company Name']}</th>
                                         {Object.entries(row).filter(([key]) => key !== 'Column1' && key !== 'Company Name' && key !== '' && key !== 'Order').map(([key, value]) => (
